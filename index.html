@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taula periodikoa — Euskera (Mugikorra)</title>
+    <style>
+        @font-face {
+            font-family: 'Arista 2.0 Alternate';
+            src: url('https://raw.githubusercontent.com/Mikelikoptero/Taularako-argazkiak/main/AristaAlternate/Arista2.0Alternate.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --primary-color: #2a6149;
+            --bg-light: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --cell-size: 44px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* Pantalla principal */
+        .main-screen {
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .onddi-title {
+            font-family: 'Arista 2.0 Alternate', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-dark);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(42, 97, 73, 0.2);
+        }
+
+        .search-results {
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: rgba(42, 97, 73, 0.05);
+        }
+
+        .search-result-item .sym {
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .search-result-item .name {
+            font-size: 14px;
+        }
+
+        .search-result-item .z {
+            float: right;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Información del elemento - SIN SCROLL */
+        .element-info {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            flex-grow: 1;
+            overflow: hidden; /* Eliminamos el scroll */
+        }
+
+        .element-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .element-square {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 28px;
+            margin-right: 14px;
+            color: #000 !important;
+        }
+
+        .element-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .element-z {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .element-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        /* Botones de funcionalidades */
+        .function-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .func-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-dark);
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 60px;
+        }
+
+        .func-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .func-btn .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        /* Botones en fila para alak y Balentziak */
+        .row-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Nuevos botones añadidos */
+        .new-row-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 0;
+        }
+
+        /* Pantalla de tabla periódica - VERTICAL MEJORADA */
+        .table-screen {
+            display: none;
+            height: 100vh;
+            overflow: auto;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-light);
+            z-index: 100;
+        }
+
+        .table-container {
+            padding: 15px;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: sticky;
+            top: 0;
+            background: var(--bg-light);
+            padding: 10px 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            background: rgba(42, 97, 73, 0.1);
+            border: none;
+            color: var(--text-dark);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* MENÚ RETRÁCTIL PARA CONTROLES */
+        .table-controls-collapsible {
+            margin-bottom: 15px;
+            position: sticky;
+            top: 70px;
+            background: var(--bg-light);
+            z-index: 10;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(42, 97, 73, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .controls-header:hover {
+            background: rgba(42, 97, 73, 0.08);
+        }
+
+        .controls-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .controls-icon {
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .table-controls-collapsible.active .controls-icon {
+            transform: rotate(180deg);
+        }
+
+        .table-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .table-controls-collapsible.active .table-controls {
+            max-height: 150px;
+            padding: 12px;
+        }
+
+        .control-toggle {
+            background: rgba(42, 97, 73, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-dark);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-toggle.active {
+            background: rgba(42, 97, 73, 0.15);
+            border-color: var(--primary-color);
+        }    
+
+        .periodic-table-container {
+            flex: 1;
+            overflow: auto;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            min-height: 600px;
+        }
+
+        .periodic-table-wrapper {
+            position: relative;
+            overflow: auto;
+            min-width: 850px;
+        }
+
+        .periodic {
+            display: grid;
+            grid-template-columns: 20px repeat(18, var(--cell-size));
+            gap: 3px;
+            margin-bottom: 15px;
+        }
+
+        /* ETIQUETAS DE PERÍODOS - CORREGIDAS */
+        .period-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-muted);
+            background: rgba(42, 97, 73, 0.05);
+            border-radius: 4px;
+            padding: 8px 4px;
+            height: var(--cell-size);
+            width: 20px;
+        }
+
+        /* ETIQUETAS DE GRUPOS - CORREGIDAS */
+        .group-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-muted);
+            background: rgba(42, 97, 73, 0.05);
+            border-radius: 4px;
+            padding: 2px 4px;
+            height: 20px;
+            width: var(--cell-size);
+        }
+
+        /* FILA DE GRUPOS */
+        .group-row {
+            display: contents;
+        }
+
+        .cell {
+            background: rgba(240, 240, 240, 0.8);
+            border-radius: 4px;
+            padding: 3px;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 9px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+            min-height: 0;
+            width: var(--cell-size);
+            height: var(--cell-size);
+        }
+
+        .cell .num {
+            font-size: 7px;
+            opacity: 0.85;
+        }
+
+        .cell .sym {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1;
+            text-align: center;
+            margin: 1px 0;
+        }
+
+        .cell .ename {
+            font-size: 6px;
+            opacity: 0.95;
+            line-height: 1.05;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(42, 97, 73, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .bottom-series-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 850px;
+        }
+
+        .bottom-series {
+            display: flex;
+            gap: 3px;
+            background: var(--bg-card);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            align-items: center;
+        }
+
+        /* ESPACIOS VACÍOS CORREGIDOS - ahora 3 espacios para alinear con grupo 3 */
+        .space-cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            flex-shrink: 0;
+            opacity: 0;
+        }
+
+        /* ESPACIO PARA ETIQUETAS DE PERÍODOS */
+        .period-space-cell {
+            width: 20px;
+            height: var(--cell-size);
+            flex-shrink: 0;
+            opacity: 0;
+        }
+
+        /* Colores de categorías */
+        .alkali { background: #FFB6C1; color: #333 }
+        .alkaline { background: #FFD8B1; color: #333 }
+        .lanthanide { background: #C9E4DE; color: #333 }
+        .actinide { background: #D8BFD8; color: #333 }
+        .transition { background: #B0E0E6; color: #333 }
+        .post-transition { background: #E6E6FA; color: #333 }
+        .metalloid { background: #98FB98; color: #333 }
+        .nonmetal { background: #F0E68C; color: #333 }
+        .halogen { background: #FFDEAD; color: #333 }
+        .noble { background: #DDA0DD; color: #333 }
+
+        /* Colores de bloques electrónicos */
+        .s-block { background: #FFB6C1 !important; color: #333; }
+        .p-block { background: #B19CD9 !important; color: #333; }
+        .d-block { background: #87CEEB !important; color: #333; }
+        .f-block { background: #FFDAC1 !important; color: #333; }
+
+        /* Colores para electronegatividad */
+        .electroneg-low { background: #e6f3ff !important; color: #333; }
+        .electroneg-medium { background: #99ccff !important; color: #333; }
+        .electroneg-high { background: #0066cc !important; color: #fff; }
+
+        /* Colores para radio atómico */
+        .radius-very-small { background: linear-gradient(135deg, #e8f5e8, #c8e6c9) !important; color: #333; }
+        .radius-small { background: linear-gradient(135deg, #a5d6a7, #81c784) !important; color: #333; }
+        .radius-medium-small { background: linear-gradient(135deg, #66bb6a, #4caf50) !important; color: #333; }
+        .radius-medium { background: linear-gradient(135deg, #43a047, #388e3c) !important; color: #fff; }
+        .radius-medium-large { background: linear-gradient(135deg, #2e7d32, #1b5e20) !important; color: #fff; }
+        .radius-large { background: linear-gradient(135deg, #1b5e20, #0d3c13) !important; color: #fff; }
+        .radius-very-large { background: linear-gradient(135deg, #0d3c13, #052509) !important; color: #fff; }
+
+        /* Colores para ionización */
+        .ionization-very-low { background: linear-gradient(135deg, #ffe6e6, #ffcdd2) !important; color: #333; }
+        .ionization-low { background: linear-gradient(135deg, #ef9a9a, #e57373) !important; color: #333; }
+        .ionization-medium-low { background: linear-gradient(135deg, #ef5350, #f44336) !important; color: #fff; }
+        .ionization-medium { background: linear-gradient(135deg, #e53935, #d32f2f) !important; color: #fff; }
+        .ionization-medium-high { background: linear-gradient(135deg, #c62828, #b71c1c) !important; color: #fff; }
+        .ionization-high { background: linear-gradient(135deg, #b71c1c, #8b0000) !important; color: #fff; }
+        .ionization-very-high { background: linear-gradient(135deg, #8b0000, #5a0000) !important; color: #fff; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .function-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .element-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .periodic-table-container {
+                padding: 5px;
+            }
+            
+            .cell .sym {
+                font-size: 10px;
+            }
+            
+            .period-label, .group-label {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla principal -->
+    <div class="main-screen" id="mainScreen">
+        <div class="onddi-title">ONDDI AKADEMIA</div>
+        
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchInput" placeholder="Bilatu elementua...">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <div class="element-info" id="elementInfo">
+            <div class="element-header">
+                <div class="element-square" id="elementSquare">—</div>
+                <div>
+                    <div class="element-name" id="elementName">Aukeratu elementu bat</div>
+                    <div class="element-z" id="elementZ">Z = —</div>
+                </div>
+            </div>
+            <div class="element-details">
+                <div class="detail-item">
+                    <div class="detail-label">Masa molarra (u)</div>
+                    <div class="detail-value" id="detailMass">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Balentziak</div>
+                    <div class="detail-value" id="detailVal">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Konfigurazioa</div>
+                    <div class="detail-value" id="detailConfig">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Elektronegatibitatea</div>
+                    <div class="detail-value" id="detailElectroneg">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Erradio atomikoa (pm)</div>
+                    <div class="detail-value" id="detailRadius">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Ionizazio energia (kJ/mol)</div>
+                    <div class="detail-value" id="detailIonization">—</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="function-buttons">
+            <button class="func-btn" id="showTableBtn">
+                <div>Taula periodikoa</div>
+            </button>
+            
+            <div class="row-buttons">
+                <button class="func-btn" id="showOrbitalsBtn">
+                    <div>Orbitalak 3D</div>
+                </button>
+                <button class="func-btn" id="showValenceBtn">
+                    <div>Balentziak</div>
+                </button>
+            </div>
+            
+            <!-- NUEVOS BOTONES AÑADIDOS -->
+            <div class="new-row-buttons">
+                <button class="func-btn" id="showCompoundsBtn">
+                    <div>Konposatuak</div>
+                </button>
+                <button class="func-btn" id="showCalculatorBtn">
+                    <div>Kalkulagailuak</div>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pantalla de tabla periódica - VERTICAL MEJORADA -->
+    <div class="table-screen" id="tableScreen">
+        <div class="table-container">
+            <div class="table-header">
+                <button class="back-btn" id="backFromTableBtn">←</button>
+                <div class="table-title">Taula Periodikoa</div>
+                <div style="width: 40px;"></div>
+            </div>
+            
+            <!-- MENÚ RETRÁCTIL PARA CONTROLES -->
+            <div class="table-controls-collapsible" id="controlsCollapsible">
+                <div class="controls-header">
+                    <div class="controls-title">Kolore Eskemak</div>
+                    <div class="controls-icon">▼</div>
+                </div>
+                <div class="table-controls">
+                    <button class="control-toggle active" id="toggleNormal">Familia</button>
+                    <button class="control-toggle" id="toggleElec">Orbitalak</button>
+                    <button class="control-toggle" id="toggleRadius">Erradioa</button>
+                    <button class="control-toggle" id="toggleIonization">Ionizazioa</button>
+                    <button class="control-toggle" id="toggleElectroneg">Elektronegatibitatea</button>
+                </div>
+            </div>
+            
+            <div class="periodic-table-container">
+                <div class="periodic-table-wrapper">
+                    <div class="periodic" id="table"></div>
+                    <div class="bottom-series-container">
+                        <div class="bottom-series" id="lanthanides"></div>
+                        <div class="bottom-series" id="actinides"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos completos de los elementos - CORREGIDOS DATOS DE IONIZACIÓN
+        const elements = [
+ {z:1,sym:'H',name:'Hidrogeno',mass:1.008,val:[-1,1],config:'1s¹',group:'nonmetal',x:1,y:1,radius:53,electroneg:2.20,ionization:1312},
+ {z:2,sym:'He',name:'Helio',mass:4.0026,val:[0],config:'1s²',group:'noble',x:18,y:1,radius:31,electroneg:0,ionization:2372},
+ {z:3,sym:'Li',name:'Litio',mass:6.94,val:[1],config:'[He] 2s¹',group:'alkali',x:1,y:2,radius:167,electroneg:0.98,ionization:520},
+ {z:4,sym:'Be',name:'Berilio',mass:9.0122,val:[2],config:'[He] 2s²',group:'alkaline',x:2,y:2,radius:112,electroneg:1.57,ionization:899},
+ {z:5,sym:'B',name:'Boro',mass:10.81,val:[3],config:'[He] 2s² 2p¹',group:'metalloid',x:13,y:2,radius:87,electroneg:2.04,ionization:801},
+ {z:6,sym:'C',name:'Karbono',mass:12.011,val:[-4,2,4],config:'[He] 2s² 2p²',group:'nonmetal',x:14,y:2,radius:67,electroneg:2.55,ionization:1086},
+ {z:7,sym:'N',name:'Nitrogeno',mass:14.007,val:[-3,1,3,5],config:'[He] 2s² 2p³',group:'nonmetal',x:15,y:2,radius:56,electroneg:3.04,ionization:1402},
+ {z:8,sym:'O',name:'Oxigeno',mass:15.999,val:[-2,-1],config:'[He] 2s² 2p⁴',group:'nonmetal',x:16,y:2,radius:48,electroneg:3.44,ionization:1314},
+ {z:9,sym:'F',name:'Fluor',mass:18.998,val:[-1],config:'[He] 2s² 2p⁵',group:'halogen',x:17,y:2,radius:42,electroneg:3.98,ionization:1681},
+ {z:10,sym:'Ne',name:'Neon',mass:20.180,val:[0],config:'[He] 2s² 2p⁶',group:'noble',x:18,y:2,radius:38,electroneg:0,ionization:2081},
+
+ {z:11,sym:'Na',name:'Sodio',mass:22.990,val:[1],config:'[Ne] 3s¹',group:'alkali',x:1,y:3,radius:190,electroneg:0.93,ionization:496},
+ {z:12,sym:'Mg',name:'Magnesio',mass:24.305,val:[2],config:'[Ne] 3s²',group:'alkaline',x:2,y:3,radius:145,electroneg:1.31,ionization:738},
+ {z:13,sym:'Al',name:'Aluminio',mass:26.982,val:[3],config:'[Ne] 3s² 3p¹',group:'post-transition',x:13,y:3,radius:118,electroneg:1.61,ionization:577},
+ {z:14,sym:'Si',name:'Silizio',mass:28.085,val:[-4,4],config:'[Ne] 3s² 3p²',group:'metalloid',x:14,y:3,radius:111,electroneg:1.90,ionization:786},
+ {z:15,sym:'P',name:'Fosforo',mass:30.974,val:[-3,3,5],config:'[Ne] 3s² 3p³',group:'nonmetal',x:15,y:3,radius:98,electroneg:2.19,ionization:1012},
+ {z:16,sym:'S',name:'Sufre',mass:32.06,val:[-2,2,4,6],config:'[Ne] 3s² 3p⁴',group:'nonmetal',x:16,y:3,radius:88,electroneg:2.58,ionization:1000},
+ {z:17,sym:'Cl',name:'Kloro',mass:35.45,val:[-1,1,3,5,7],config:'[Ne] 3s² 3p⁵',group:'halogen',x:17,y:3,radius:79,electroneg:3.16,ionization:1251},
+ {z:18,sym:'Ar',name:'Argon',mass:39.948,val:[0],config:'[Ne] 3s² 3p⁶',group:'noble',x:18,y:3,radius:71,electroneg:0,ionization:1521},
+
+ {z:19,sym:'K',name:'Potasio',mass:39.098,val:[1],config:'[Ar] 4s¹',group:'alkali',x:1,y:4,radius:243,electroneg:0.82,ionization:419},
+ {z:20,sym:'Ca',name:'Kaltzio',mass:40.078,val:[2],config:'[Ar] 4s²',group:'alkaline',x:2,y:4,radius:194,electroneg:1.00,ionization:590},
+ {z:21,sym:'Sc',name:'Eskandio',mass:44.956,val:[3],config:'[Ar] 4s² 3d¹',group:'transition',x:3,y:4,radius:184,electroneg:1.36,ionization:631},
+ {z:22,sym:'Ti',name:'Titanio',mass:47.867,val:[2,3,4],config:'[Ar] 4s² 3d²',group:'transition',x:4,y:4,radius:176,electroneg:1.54,ionization:658},
+ {z:23,sym:'V',name:'Banadio',mass:50.942,val:[2,3,4,5],config:'[Ar] 4s² 3d³',group:'transition',x:5,y:4,radius:171,electroneg:1.63,ionization:650},
+ {z:24,sym:'Cr',name:'Kromo',mass:51.996,val:[2,3,6],config:'[Ar] 4s² 3d⁴',group:'transition',x:6,y:4,radius:166,electroneg:1.66,ionization:653},
+ {z:25,sym:'Mn',name:'Manganeso',mass:54.938,val:[2,3,4,6,7],config:'[Ar] 4s² 3d⁵',group:'transition',x:7,y:4,radius:161,electroneg:1.55,ionization:717},
+ {z:26,sym:'Fe',name:'Burdin',mass:55.845,val:[2,3],config:'[Ar] 4s² 3d⁶',group:'transition',x:8,y:4,radius:156,electroneg:1.83,ionization:762},
+ {z:27,sym:'Co',name:'Kobalto',mass:58.933,val:[2,3],config:'[Ar] 4s² 3d⁷',group:'transition',x:9,y:4,radius:152,electroneg:1.88,ionization:760},
+ {z:28,sym:'Ni',name:'Nikel',mass:58.693,val:[2,3],config:'[Ar] 4s² 3d⁸',group:'transition',x:10,y:4,radius:149,electroneg:1.91,ionization:737},
+ {z:29,sym:'Cu',name:'Kobre',mass:63.546,val:[1,2],config:'[Ar] 4s² 3d⁹',group:'transition',x:11,y:4,radius:145,electroneg:1.90,ionization:745},
+ {z:30,sym:'Zn',name:'Zink',mass:65.38,val:[2],config:'[Ar] 4s² 3d¹⁰',group:'transition',x:12,y:4,radius:142,electroneg:1.65,ionization:906},
+ {z:31,sym:'Ga',name:'Galio',mass:69.723,val:[3],config:'[Ar] 4s² 3d¹⁰ 4p¹',group:'post-transition',x:13,y:4,radius:136,electroneg:1.81,ionization:579},
+ {z:32,sym:'Ge',name:'Germanio',mass:72.630,val:[4],config:'[Ar] 4s² 3d¹⁰ 4p²',group:'metalloid',x:14,y:4,radius:125,electroneg:2.01,ionization:762},
+ {z:33,sym:'As',name:'Artseniko',mass:74.922,val:[-3,3,5],config:'[Ar] 4s² 3d¹⁰ 4p³',group:'metalloid',x:15,y:4,radius:114,electroneg:2.18,ionization:947},
+ {z:34,sym:'Se',name:'Selenio',mass:78.971,val:[-2,2,4,6],config:'[Ar] 4s² 3d¹⁰ 4p⁴',group:'nonmetal',x:16,y:4,radius:103,electroneg:2.55,ionization:941},
+ {z:35,sym:'Br',name:'Bromo',mass:79.904,val:[-1,1,3,5,7],config:'[Ar] 4s² 3d¹⁰ 4p⁵',group:'halogen',x:17,y:4,radius:94,electroneg:2.96,ionization:1140},
+ {z:36,sym:'Kr',name:'Kripton',mass:83.798,val:[0,2],config:'[Ar] 4s² 3d¹⁰ 4p⁶',group:'noble',x:18,y:4,radius:88,electroneg:3.00,ionization:1351},
+
+ {z:37,sym:'Rb',name:'Rubidio',mass:85.468,val:[1],config:'[Kr] 5s¹',group:'alkali',x:1,y:5,radius:265,electroneg:0.82,ionization:403},
+ {z:38,sym:'Sr',name:'Estrontzio',mass:87.62,val:[2],config:'[Kr] 5s²',group:'alkaline',x:2,y:5,radius:219,electroneg:0.95,ionization:549},
+ {z:39,sym:'Y',name:'Itrio',mass:88.906,val:[3],config:'[Kr] 5s² 4d¹',group:'transition',x:3,y:5,radius:212,electroneg:1.22,ionization:600},
+ {z:40,sym:'Zr',name:'Zirkonio',mass:91.224,val:[4],config:'[Kr] 5s² 4d²',group:'transition',x:4,y:5,radius:206,electroneg:1.33,ionization:640},
+ {z:41,sym:'Nb',name:'Niobio',mass:92.906,val:[3,5],config:'[Kr] 5s² 4d³',group:'transition',x:5,y:5,radius:198,electroneg:1.6,ionization:652},
+ {z:42,sym:'Mo',name:'Molibdeno',mass:95.95,val:[2,3,4,5,6],config:'[Kr] 5s² 4d⁴',group:'transition',x:6,y:5,radius:190,electroneg:2.16,ionization:684},
+ {z:43,sym:'Tc',name:'Teknezio',mass:98,val:[4,7],config:'[Kr] 5s² 4d⁵',group:'transition',x:7,y:5,radius:183,electroneg:1.9,ionization:702},
+ {z:44,sym:'Ru',name:'Rutenio',mass:101.07,val:[3,4,6,8],config:'[Kr] 5s² 4d⁶',group:'transition',x:8,y:5,radius:178,electroneg:2.2,ionization:710},
+ {z:45,sym:'Rh',name:'Rodio',mass:102.91,val:[3,4],config:'[Kr] 5s² 4d⁷',group:'transition',x:9,y:5,radius:173,electroneg:2.28,ionization:720},
+ {z:46,sym:'Pd',name:'Paladio',mass:106.42,val:[2,4],config:'[Kr] 5s² 4d⁸',group:'transition',x:10,y:5,radius:169,electroneg:2.20,ionization:804},
+ {z:47,sym:'Ag',name:'Zilar',mass:107.87,val:[1],config:'[Kr] 5s² 4d⁹',group:'transition',x:11,y:5,radius:165,electroneg:1.93,ionization:731},
+ {z:48,sym:'Cd',name:'Kadmio',mass:112.41,val:[2],config:'[Kr] 5s² 4d¹⁰',group:'transition',x:12,y:5,radius:161,electroneg:1.69,ionization:867},
+ {z:49,sym:'In',name:'Indio',mass:114.82,val:[3],config:'[Kr] 5s² 4d¹⁰ 5p¹',group:'post-transition',x:13,y:5,radius:156,electroneg:1.78,ionization:558},
+ {z:50,sym:'Sn',name:'Eztainu',mass:118.71,val:[2,4],config:'[Kr] 5s² 4d¹⁰ 5p²',group:'post-transition',x:14,y:5,radius:145,electroneg:1.96,ionization:709},
+ {z:51,sym:'Sb',name:'Antimonio',mass:121.76,val:[-3,3,5],config:'[Kr] 5s² 4d¹⁰ 5p³',group:'metalloid',x:15,y:5,radius:133,electroneg:2.05,ionization:834},
+ {z:52,sym:'Te',name:'Telurio',mass:127.60,val:[-2,2,4,6],config:'[Kr] 5s² 4d¹⁰ 5p⁴',group:'metalloid',x:16,y:5,radius:123,electroneg:2.1,ionization:869},
+ {z:53,sym:'I',name:'Iodo',mass:126.90,val:[-1,1,3,5,7],config:'[Kr] 5s² 4d¹⁰ 5p⁵',group:'halogen',x:17,y:5,radius:115,electroneg:2.66,ionization:1008},
+ {z:54,sym:'Xe',name:'Xenon',mass:131.29,val:[0,2,4,6,8],config:'[Kr] 5s² 4d¹⁰ 5p⁶',group:'noble',x:18,y:5,radius:108,electroneg:2.6,ionization:1170},
+
+ {z:55,sym:'Cs',name:'Zesio',mass:132.91,val:[1],config:'[Xe] 6s¹',group:'alkali',x:1,y:6,radius:298,electroneg:0.79,ionization:376},
+ {z:56,sym:'Ba',name:'Bario',mass:137.33,val:[2],config:'[Xe] 6s²',group:'alkaline',x:2,y:6,radius:253,electroneg:0.89,ionization:503},
+ // Placeholder for lanthanides 57-71
+ {z:72,sym:'Hf',name:'Hafnio',mass:178.49,val:[4],config:'[Xe] 6s² 4f¹⁴ 5d²',group:'transition',x:4,y:6,radius:208,electroneg:1.3,ionization:658},
+ {z:73,sym:'Ta',name:'Tantalo',mass:180.95,val:[5],config:'[Xe] 6s² 4f¹⁴ 5d³',group:'transition',x:5,y:6,radius:200,electroneg:1.5,ionization:761},
+ {z:74,sym:'W',name:'Wolfram',mass:183.84,val:[4,6],config:'[Xe] 6s² 4f¹⁴ 5d⁴',group:'transition',x:6,y:6,radius:193,electroneg:2.36,ionization:770},
+ {z:75,sym:'Re',name:'Renio',mass:186.21,val:[-1,2,4,6,7],config:'[Xe] 6s² 4f¹⁴ 5d⁵',group:'transition',x:7,y:6,radius:188,electroneg:1.9,ionization:760},
+ {z:76,sym:'Os',name:'Osmio',mass:190.23,val:[2,3,4,6,8],config:'[Xe] 6s² 4f¹⁴ 5d⁶',group:'transition',x:8,y:6,radius:185,electroneg:2.2,ionization:840},
+ {z:77,sym:'Ir',name:'Iridio',mass:192.22,val:[3,4,6],config:'[Xe] 6s² 4f¹⁴ 5d⁷',group:'transition',x:9,y:6,radius:180,electroneg:2.20,ionization:880},
+ {z:78,sym:'Pt',name:'Platino',mass:195.08,val:[2,4],config:'[Xe] 6s² 4f¹⁴ 5d⁸',group:'transition',x:10,y:6,radius:177,electroneg:2.28,ionization:870},
+ {z:79,sym:'Au',name:'Urre',mass:196.97,val:[1,3],config:'[Xe] 6s² 4f¹⁴ 5d⁹',group:'transition',x:11,y:6,radius:174,electroneg:2.54,ionization:890},
+ {z:80,sym:'Hg',name:'Merkurio',mass:200.59,val:[1,2],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰',group:'transition',x:12,y:6,radius:171,electroneg:2.00,ionization:1007},
+ {z:81,sym:'Tl',name:'Talio',mass:204.38,val:[1,3],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p¹',group:'post-transition',x:13,y:6,radius:156,electroneg:1.62,ionization:589},
+ {z:82,sym:'Pb',name:'Berun',mass:207.2,val:[2,4],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p²',group:'post-transition',x:14,y:6,radius:154,electroneg:1.87,ionization:716},
+ {z:83,sym:'Bi',name:'Bismuto',mass:208.98,val:[3,5],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p³',group:'post-transition',x:15,y:6,radius:143,electroneg:2.02,ionization:703},
+ {z:84,sym:'Po',name:'Polonio',mass:209,val:[-2,2,4,6],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p⁴',group:'metalloid',x:16,y:6,radius:135,electroneg:2.0,ionization:812},
+ {z:85,sym:'At',name:'Astato',mass:210,val:[-1,1,3,5,7],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p⁵',group:'halogen',x:17,y:6,radius:127,electroneg:2.2,ionization:930},
+ {z:86,sym:'Rn',name:'Radon',mass:222,val:[0,2],config:'[Xe] 6s² 4f¹⁴ 5d¹⁰ 6p⁶',group:'noble',x:18,y:6,radius:120,electroneg:0,ionization:1037},
+
+ {z:87,sym:'Fr',name:'Frantzio',mass:223,val:[1],config:'[Rn] 7s¹',group:'alkali',x:1,y:7,radius:0,electroneg:0.7,ionization:380},
+ {z:88,sym:'Ra',name:'Radio',mass:226,val:[2],config:'[Rn] 7s²',group:'alkaline',x:2,y:7,radius:0,electroneg:0.9,ionization:509},
+ // Placeholder for actinides 89-103
+ {z:104,sym:'Rf',name:'Rutherfordio',mass:267,val:[4],config:'[Rn] 7s² 5f¹⁴ 6d²',group:'transition',x:4,y:7,radius:0,electroneg:0,ionization:580},
+ {z:105,sym:'Db',name:'Dubnio',mass:268,val:[5],config:'[Rn] 7s² 5f¹⁴ 6d³',group:'transition',x:5,y:7,radius:0,electroneg:0,ionization:0},
+ {z:106,sym:'Sg',name:'Seaborgio',mass:271,val:[6],config:'[Rn] 7s² 5f¹⁴ 6d⁴',group:'transition',x:6,y:7,radius:0,electroneg:0,ionization:0},
+ {z:107,sym:'Bh',name:'Bohrio',mass:270,val:[7],config:'[Rn] 7s² 5f¹⁴ 6d⁵',group:'transition',x:7,y:7,radius:0,electroneg:0,ionization:0},
+ {z:108,sym:'Hs',name:'Hassio',mass:269,val:[6,8],config:'[Rn] 7s² 5f¹⁴ 6d⁶',group:'transition',x:8,y:7,radius:0,electroneg:0,ionization:0},
+ {z:109,sym:'Mt',name:'Meitnerio',mass:278,val:[],config:'—',group:'transition',x:9,y:7,radius:0,electroneg:0,ionization:0},
+ {z:110,sym:'Ds',name:'Darmstadtio',mass:281,val:[],config:'—',group:'transition',x:10,y:7,radius:0,electroneg:0,ionization:0},
+ {z:111,sym:'Rg',name:'Roentgenio',mass:282,val:[],config:'—',group:'transition',x:11,y:7,radius:0,electroneg:0,ionization:0},
+ {z:112,sym:'Cn',name:'Kopernizio',mass:285,val:[],config:'[Rn] 7s² 5f¹⁴ 6d¹⁰',group:'transition',x:12,y:7,radius:0,electroneg:0,ionization:0},
+ {z:113,sym:'Nh',name:'Nihonio',mass:286,val:[],config:'[Rn] 7s² 5f¹⁴ 5d¹⁰ 7p¹',group:'post-transition',x:13,y:7,radius:0,electroneg:0,ionization:0},
+ {z:114,sym:'Fl',name:'Flerovio',mass:289,val:[],config:'—',group:'post-transition',x:14,y:7,radius:0,electroneg:0,ionization:0},
+ {z:115,sym:'Mc',name:'Moskovio',mass:289,val:[],config:'—',group:'post-transition',x:15,y:7,radius:0,electroneg:0,ionization:0},
+ {z:116,sym:'Lv',name:'Livermorio',mass:293,val:[],config:'—',group:'post-transition',x:16,y:7,radius:0,electroneg:0,ionization:0},
+ {z:117,sym:'Ts',name:'Teneso',mass:294,val:[],config:'—',group:'halogen',x:17,y:7,radius:0,electroneg:0,ionization:0},
+ {z:118,sym:'Og',name:'Oganeson',mass:294,val:[0],config:'—',group:'noble',x:18,y:7,radius:0,electroneg:0,ionization:0}
+];
+
+// Lanthanides and Actinides for bottom rows (including La and Ac) - MODIFICADO: Lantano y Actinio empiezan en grupo 3
+const lanthanides = [
+ {z:57,sym:'La',name:'Lantano',mass:138.91,val:[3],config:'[Xe] 6s² 4f¹',group:'lanthanide',x:3,radius:187,electroneg:1.1,ionization:538},
+ {z:58,sym:'Ce',name:'Zerio',mass:140.12,val:[3,4],config:'[Xe] 6s² 4f²',group:'lanthanide',x:4,radius:181,electroneg:1.12,ionization:534},
+ {z:59,sym:'Pr',name:'Praseodimio',mass:140.91,val:[3,4],config:'[Xe] 6s² 4f³',group:'lanthanide',x:5,radius:182,electroneg:1.13,ionization:527},
+ {z:60,sym:'Nd',name:'Neodimio',mass:144.24,val:[3],config:'[Xe] 6s² 4f⁴',group:'lanthanide',x:6,radius:181,electroneg:1.14,ionization:533},
+ {z:61,sym:'Pm',name:'Prometio',mass:145,val:[3],config:'[Xe] 6s² 4f⁵',group:'lanthanide',x:7,radius:183,electroneg:1.13,ionization:540},
+ {z:62,sym:'Sm',name:'Samario',mass:150.36,val:[2,3],config:'[Xe] 6s² 4f⁶',group:'lanthanide',x:8,radius:180,electroneg:1.17,ionization:544},
+ {z:63,sym:'Eu',name:'Europio',mass:151.96,val:[2,3],config:'[Xe] 6s² 4f⁷',group:'lanthanide',x:9,radius:199,electroneg:1.2,ionization:547},
+ {z:64,sym:'Gd',name:'Gadolinio',mass:157.25,val:[3],config:'[Xe] 6s² 4f⁸',group:'lanthanide',x:10,radius:179,electroneg:1.2,ionization:593},
+ {z:65,sym:'Tb',name:'Terbio',mass:158.93,val:[3,4],config:'[Xe] 6s² 4f⁹',group:'lanthanide',x:11,radius:176,electroneg:1.2,ionization:565},
+ {z:66,sym:'Dy',name:'Disprosio',mass:162.50,val:[3],config:'[Xe] 6s² 4f¹⁰',group:'lanthanide',x:12,radius:175,electroneg:1.22,ionization:572},
+ {z:67,sym:'Ho',name:'Holmio',mass:164.93,val:[3],config:'[Xe] 6s² 4f¹¹',group:'lanthanide',x:13,radius:174,electroneg:1.23,ionization:581},
+ {z:68,sym:'Er',name:'Erbio',mass:167.26,val:[3],config:'[Xe] 6s² 4f¹²',group:'lanthanide',x:14,radius:173,electroneg:1.24,ionization:589},
+ {z:69,sym:'Tm',name:'Tulio',mass:168.93,val:[2,3],config:'[Xe] 6s² 4f¹³',group:'lanthanide',x:15,radius:172,electroneg:1.25,ionization:596},
+ {z:70,sym:'Yb',name:'Iterbio',mass:173.05,val:[2,3],config:'[Xe] 6s² 4f¹⁴',group:'lanthanide',x:16,radius:194,electroneg:1.1,ionization:603},
+ {z:71,sym:'Lu',name:'Lutezio',mass:174.97,val:[3],config:'[Xe] 6s² 4f¹ 5d¹',group:'lanthanide',x:17,radius:172,electroneg:1.27,ionization:524}
+];
+
+const actinides = [
+ {z:89,sym:'Ac',name:'Aktinio',mass:227,val:[3],config:'[Rn] 7s² 5f¹',group:'actinide',x:3,radius:188,electroneg:1.1,ionization:499},
+ {z:90,sym:'Th',name:'Torio',mass:232.04,val:[4],config:'[Rn] 7s² 5f²',group:'actinide',x:4,radius:179,electroneg:1.3,ionization:587},
+ {z:91,sym:'Pa',name:'Protaktinio',mass:231.04,val:[4,5],config:'[Rn] 7s² 5f³',group:'actinide',x:5,radius:163,electroneg:1.5,ionization:568},
+ {z:92,sym:'U',name:'Uranio',mass:238.03,val:[3,4,5,6],config:'[Rn] 7s² 5f⁴',group:'actinide',x:6,radius:156,electroneg:1.38,ionization:597},
+ {z:93,sym:'Np',name:'Neptunio',mass:237,val:[3,4,5,6,7],config:'[Rn] 7s² 5f⁵',group:'actinide',x:7,radius:155,electroneg:1.36,ionization:604},
+ {z:94,sym:'Pu',name:'Plutonio',mass:244,val:[3,4,5,6,7],config:'[Rn] 7s² 5f⁶',group:'actinide',x:8,radius:159,electroneg:1.28,ionization:584},
+ {z:95,sym:'Am',name:'Amerizio',mass:243,val:[3,4,5,6],config:'[Rn] 7s² 5f⁷',group:'actinide',x:9,radius:173,electroneg:1.13,ionization:578},
+ {z:96,sym:'Cm',name:'Kurio',mass:247,val:[3,4],config:'[Rn] 7s² 5f⁸',group:'actinide',x:10,radius:174,electroneg:1.28,ionization:581},
+ {z:97,sym:'Bk',name:'Berkelio',mass:247,val:[3,4],config:'[Rn] 7s² 5f⁹',group:'actinide',x:11,radius:170,electroneg:1.3,ionization:601},
+ {z:98,sym:'Cf',name:'Kalifornio',mass:251,val:[3],config:'[Rn] 7s² 5f¹⁰',group:'actinide',x:12,radius:186,electroneg:1.3,ionization:608},
+ {z:99,sym:'Es',name:'Einsteinio',mass:252,val:[3],config:'[Rn] 7s² 5f¹¹',group:'actinide',x:13,radius:186,electroneg:1.3,ionization:619},
+ {z:100,sym:'Fm',name:'Fermio',mass:257,val:[3],config:'[Rn] 7s² 5f¹²',group:'actinide',x:14,radius:0,electroneg:1.3,ionization:627},
+ {z:101,sym:'Md',name:'Mendelevio',mass:258,val:[2,3],config:'[Rn] 7s² 5f¹³',group:'actinide',x:15,radius:0,electroneg:1.3,ionization:635},
+ {z:102,sym:'No',name:'Nobelio',mass:259,val:[2,3],config:'[Rn] 7s² 5f¹⁴',group:'actinide',x:16,radius:0,electroneg:1.3,ionization:642},
+ {z:103,sym:'Lr',name:'Lawrentzio',mass:266,val:[3],config:'[Rn] 7s² 5f¹⁴ 6d¹',group:'actinide',x:17,radius:0,electroneg:0,ionization:470}
+];
+        // Referencias a elementos DOM
+        const mainScreen = document.getElementById('mainScreen');
+        const tableScreen = document.getElementById('tableScreen');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const elementInfo = document.getElementById('elementInfo');
+        const showTableBtn = document.getElementById('showTableBtn');
+        const showOrbitalsBtn = document.getElementById('showOrbitalsBtn');
+        const showValenceBtn = document.getElementById('showValenceBtn');
+        const showCompoundsBtn = document.getElementById('showCompoundsBtn');
+        const showCalculatorBtn = document.getElementById('showCalculatorBtn');
+        const backFromTableBtn = document.getElementById('backFromTableBtn');
+        const controlsCollapsible = document.getElementById('controlsCollapsible');
+        const toggleElec = document.getElementById('toggleElec');
+        const toggleElectroneg = document.getElementById('toggleElectroneg');
+        const toggleRadius = document.getElementById('toggleRadius');
+        const toggleIonization = document.getElementById('toggleIonization');
+        const toggleNormal = document.getElementById('toggleNormal');
+        const table = document.getElementById('table');
+        const lanthanidesContainer = document.getElementById('lanthanides');
+        const actinidesContainer = document.getElementById('actinides');
+
+        // Variables de estado
+        let currentDisplayMode = 'normal';
+        let allCells = [];
+
+        // Funcionalidad de búsqueda
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            searchResults.innerHTML = '';
+            
+            if (searchTerm.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            const allElements = [...elements, ...lanthanides, ...actinides];
+            const matches = allElements.filter(el => 
+                el.name.toLowerCase().includes(searchTerm) ||
+                el.sym.toLowerCase().includes(searchTerm) ||
+                el.z.toString().includes(searchTerm)
+            );
+            
+            if (matches.length > 0) {
+                matches.forEach(el => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <span class="sym">${el.sym}</span>
+                        <span class="name">${el.name}</span>
+                        <span class="z">${el.z}</span>
+                    `;
+                    item.addEventListener('click', () => {
+                        showElementInfo(el);
+                        searchResults.style.display = 'none';
+                        searchInput.value = '';
+                    });
+                    searchResults.appendChild(item);
+                });
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Mostrar información del elemento - CORREGIDA LA VISUALIZACIÓN DE IONIZACIÓN
+        function showElementInfo(el) {
+            document.getElementById('elementName').textContent = el.name;
+            document.getElementById('elementZ').textContent = `Z = ${el.z}`;
+            document.getElementById('elementSquare').textContent = el.sym;
+            document.getElementById('elementSquare').style.background = getGroupColor(el.group);
+            
+            document.getElementById('detailMass').textContent = el.mass ? el.mass + ' u' : '—';
+            document.getElementById('detailVal').textContent = (el.val && el.val.length) ? el.val.join(', ') : '—';
+            document.getElementById('detailConfig').textContent = el.config || '—';
+            
+            const electronegDisplay = document.getElementById('detailElectroneg');
+            if (el.electroneg && el.electroneg > 0) {
+                electronegDisplay.textContent = el.electroneg.toFixed(2);
+            } else {
+                electronegDisplay.textContent = 'Ezezaguna';
+            }
+            
+            const radiusDisplay = document.getElementById('detailRadius');
+            if (el.radius && el.radius > 0) {
+                radiusDisplay.textContent = el.radius + ' pm';
+            } else {
+                radiusDisplay.textContent = 'Ezezaguna';
+            }
+            
+            // CORRECCIÓN: Mostrar correctamente la energía de ionización
+            const ionizationDisplay = document.getElementById('detailIonization');
+            if (el.ionization !== undefined && el.ionization !== null && el.ionization > 0) {
+                ionizationDisplay.textContent = el.ionization + ' kJ/mol';
+            } else {
+                ionizationDisplay.textContent = 'Ezezaguna';
+            }
+            
+            elementInfo.style.display = 'block';
+        }
+
+        // Obtener color por grupo
+        function getGroupClass(group) {
+            switch(group) {
+                case 'alkali': return 'alkali';
+                case 'alkaline': return 'alkaline';
+                case 'lanthanide': return 'lanthanide';
+                case 'actinide': return 'actinide';
+                case 'transition': return 'transition';
+                case 'post-transition': return 'post-transition';
+                case 'metalloid': return 'metalloid';
+                case 'nonmetal': return 'nonmetal';
+                case 'halogen': return 'halogen';
+                case 'noble': return 'noble';
+                default: return 'other';
+            }
+        }
+
+        function getGroupColor(group) {
+            switch(group) {
+                case 'alkali': return '#FFB6C1';
+                case 'alkaline': return '#FFD8B1';
+                case 'lanthanide': return '#C9E4DE';
+                case 'actinide': return '#D8BFD8';
+                case 'transition': return '#B0E0E6';
+                case 'post-transition': return '#E6E6FA';
+                case 'metalloid': return '#98FB98';
+                case 'nonmetal': return '#F0E68C';
+                case 'halogen': return '#FFDEAD';
+                case 'noble': return '#DDA0DD';
+                default: return '#F5F5F5';
+            }
+        }
+
+        // Determinar bloque electrónico
+        function getElectronBlock(element) {
+            const group = element.x;
+            
+            // Excepción: Helio es bloque s aunque esté en el grupo 18
+            if (element.z === 2) return 's-block';
+            
+            // Basado en la posición en la tabla periódica
+            if (element.group === 'lanthanide' || element.group === 'actinide') {
+                return 'f-block';
+            } else if (group >= 3 && group <= 12) {
+                return 'd-block';
+            } else if (group >= 13 && group <= 18) {
+                return 'p-block';
+            } else if (group >= 1 && group <= 2) {
+                return 's-block';
+            }
+            
+            return 's-block'; // default
+        }
+
+        // Aplicar colores por bloques electrónicos
+        function applyElectronBlockColors() {
+            allCells.forEach(cell => {
+                const z = parseInt(cell.dataset.z);
+                let element;
+                
+                // Encontrar el elemento en el conjunto de datos apropiado
+                if (z >= 57 && z <= 71) {
+                    element = lanthanides.find(el => el.z === z);
+                } else if (z >= 89 && z <= 103) {
+                    element = actinides.find(el => el.z === z);
+                } else {
+                    element = elements.find(el => el.z === z);
+                }
+                
+                if (element) {
+                    const block = getElectronBlock(element);
+                    
+                    // Remover clases anteriores
+                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
+                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
+                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
+                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
+                    
+                    // Aplicar nueva clase de bloque
+                    cell.classList.add(block);
+                }
+            });
+        }
+
+        // Aplicar colores por electronegatividad
+        function applyElectronegativityColors() {
+            allCells.forEach(cell => {
+                const z = parseInt(cell.dataset.z);
+                let element;
+                
+                // Encontrar el elemento en el conjunto de datos apropiado
+                if (z >= 57 && z <= 71) {
+                    element = lanthanides.find(el => el.z === z);
+                } else if (z >= 89 && z <= 103) {
+                    element = actinides.find(el => el.z === z);
+                } else {
+                    element = elements.find(el => el.z === z);
+                }
+                
+                if (element) {
+                    // Remover clases anteriores
+                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
+                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
+                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
+                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
+                    
+                    // Aplicar color basado en electronegatividad
+                    if (element.electroneg === 0) {
+                        cell.classList.add('electroneg-low');
+                    } else if (element.electroneg < 2.0) {
+                        cell.classList.add('electroneg-low');
+                    } else if (element.electroneg < 3.0) {
+                        cell.classList.add('electroneg-medium');
+                    } else {
+                        cell.classList.add('electroneg-high');
+                    }
+                }
+            });
+        }
+
+        // Aplicar colores por radio atómico
+        function applyAtomicRadiusColors() {
+            allCells.forEach(cell => {
+                const z = parseInt(cell.dataset.z);
+                let element;
+                
+                // Encontrar el elemento en el conjunto de datos apropiado
+                if (z >= 57 && z <= 71) {
+                    element = lanthanides.find(el => el.z === z);
+                } else if (z >= 89 && z <= 103) {
+                    element = actinides.find(el => el.z === z);
+                } else {
+                    element = elements.find(el => el.z === z);
+                }
+                
+                if (element) {
+                    // Remover clases anteriores
+                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
+                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
+                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
+                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
+                    
+                    // Aplicar color basado en radio atómico con más gradación
+                    if (element.radius === 0) {
+                        cell.classList.add('radius-very-small');
+                    } else if (element.radius < 60) {
+                        cell.classList.add('radius-very-small');
+                    } else if (element.radius < 90) {
+                        cell.classList.add('radius-small');
+                    } else if (element.radius < 120) {
+                        cell.classList.add('radius-medium-small');
+                    } else if (element.radius < 160) {
+                        cell.classList.add('radius-medium');
+                    } else if (element.radius < 200) {
+                        cell.classList.add('radius-medium-large');
+                    } else if (element.radius < 250) {
+                        cell.classList.add('radius-large');
+                    } else {
+                        cell.classList.add('radius-very-large');
+                    }
+                }
+            });
+        }
+
+        // Aplicar colores por energía de ionización
+        function applyIonizationColors() {
+            allCells.forEach(cell => {
+                const z = parseInt(cell.dataset.z);
+                let element;
+                
+                // Encontrar el elemento en el conjunto de datos apropiado
+                if (z >= 57 && z <= 71) {
+                    element = lanthanides.find(el => el.z === z);
+                } else if (z >= 89 && z <= 103) {
+                    element = actinides.find(el => el.z === z);
+                } else {
+                    element = elements.find(el => el.z === z);
+                }
+                
+                if (element) {
+                    // Remover clases anteriores
+                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
+                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
+                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
+                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
+                    
+                    // Aplicar color basado en energía de ionización con más gradación
+                    if (element.ionization === 0) {
+                        cell.classList.add('ionization-very-low');
+                    } else if (element.ionization < 500) {
+                        cell.classList.add('ionization-very-low');
+                    } else if (element.ionization < 700) {
+                        cell.classList.add('ionization-low');
+                    } else if (element.ionization < 900) {
+                        cell.classList.add('ionization-medium-low');
+                    } else if (element.ionization < 1100) {
+                        cell.classList.add('ionization-medium');
+                    } else if (element.ionization < 1300) {
+                        cell.classList.add('ionization-medium-high');
+                    } else if (element.ionization < 1500) {
+                        cell.classList.add('ionization-high');
+                    } else {
+                        cell.classList.add('ionization-very-high');
+                    }
+                }
+            });
+        }
+
+        // Restaurar colores normales
+        function restoreNormalColors() {
+            allCells.forEach(cell => {
+                // Remover todas las clases de color especiales
+                cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
+                                     'electroneg-low', 'electroneg-medium', 'electroneg-high',
+                                     'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
+                                     'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
+                
+                // Restaurar color original basado en grupo
+                const z = parseInt(cell.dataset.z);
+                let element;
+                
+                if (z >= 57 && z <= 71) {
+                    element = lanthanides.find(el => el.z === z);
+                } else if (z >= 89 && z <= 103) {
+                    element = actinides.find(el => el.z === z);
+                } else {
+                    element = elements.find(el => el.z === z);
+                }
+                
+                if (element) {
+                    cell.classList.add(getGroupClass(element.group));
+                }
+            });
+        }
+
+        // Crear tabla periódica con grupos y periodos
+        function createPeriodicTable() {
+            table.innerHTML = '';
+            lanthanidesContainer.innerHTML = '';
+            actinidesContainer.innerHTML = '';
+            allCells = [];
+            
+            // CREAR FILA DE GRUPOS
+            const groupRow = document.createElement('div');
+            groupRow.className = 'group-row';
+            
+            // Celda vacía para la esquina superior izquierda
+            const cornerCell = document.createElement('div');
+            cornerCell.style.gridColumn = '1';
+            cornerCell.style.gridRow = '1';
+            cornerCell.style.width = '40px';
+            cornerCell.style.height = '30px';
+            groupRow.appendChild(cornerCell);
+            
+            // Crear etiquetas de grupos (1-18)
+            for (let i = 1; i <= 18; i++) {
+                const groupLabel = document.createElement('div');
+                groupLabel.className = 'group-label';
+                groupLabel.textContent = i;
+                groupLabel.style.gridColumn = i + 1;
+                groupLabel.style.gridRow = '1';
+                groupRow.appendChild(groupLabel);
+            }
+            
+            table.appendChild(groupRow);
+            
+            // Crear celdas de la tabla principal
+            for (let period = 1; period <= 7; period++) {
+                // Crear etiqueta de período
+                const periodLabel = document.createElement('div');
+                periodLabel.className = 'period-label';
+                periodLabel.textContent = period;
+                periodLabel.style.gridColumn = '1';
+                periodLabel.style.gridRow = period + 1;
+                table.appendChild(periodLabel);
+                
+                // Crear elementos del período
+                for (let group = 1; group <= 18; group++) {
+                    const element = elements.find(el => el.x === group && el.y === period);
+                    
+                    if (element) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${getGroupClass(element.group)}`;
+                        cell.style.gridColumn = group + 1;
+                        cell.style.gridRow = period + 1;
+                        cell.dataset.z = element.z;
+                        cell.innerHTML = `
+                            <div class="num">${element.z}</div>
+                            <div class="sym">${element.sym}</div>
+                            <div class="ename">${element.name}</div>
+                        `;
+                        cell.addEventListener('click', () => {
+                            showElementInfo(element);
+                            showScreen('main');
+                        });
+                        table.appendChild(cell);
+                        allCells.push(cell);
+                    } else {
+                        // Crear celda vacía si no hay elemento
+                        const emptyCell = document.createElement('div');
+                        emptyCell.style.gridColumn = group + 1;
+                        emptyCell.style.gridRow = period + 1;
+                        emptyCell.style.width = 'var(--cell-size)';
+                        emptyCell.style.height = 'var(--cell-size)';
+                        table.appendChild(emptyCell);
+                    }
+                }
+            }
+            
+            // CREAR LANTÁNIDOS - CORREGIDA POSICIÓN (empiezan en grupo 3)
+            // Añadir espacio para etiquetas de período (40px)
+            const periodSpace = document.createElement('div');
+            periodSpace.className = 'period-space-cell';
+            lanthanidesContainer.appendChild(periodSpace);
+            
+            // Añadir 2 espacios vacíos para alinear con grupo 3
+            for (let i = 0; i < 2; i++) {
+                const space = document.createElement('div');
+                space.className = 'space-cell';
+                lanthanidesContainer.appendChild(space);
+            }
+            
+            lanthanides.forEach(el => {
+                const cell = document.createElement('div');
+                cell.className = `cell ${getGroupClass(el.group)}`;
+                cell.dataset.z = el.z;
+                cell.innerHTML = `
+                    <div class="num">${el.z}</div>
+                    <div class="sym">${el.sym}</div>
+                    <div class="ename">${el.name}</div>
+                `;
+                cell.addEventListener('click', () => {
+                    showElementInfo(el);
+                    showScreen('main');
+                });
+                lanthanidesContainer.appendChild(cell);
+                allCells.push(cell);
+            });
+            
+            // CREAR ACTÍNIDOS - CORREGIDA POSICIÓN (empiezan en grupo 3)
+            // Añadir espacio para etiquetas de período (40px)
+            const periodSpace2 = document.createElement('div');
+            periodSpace2.className = 'period-space-cell';
+            actinidesContainer.appendChild(periodSpace2);
+            
+            // Añadir 2 espacios vacíos para alinear con grupo 3
+            for (let i = 0; i < 2; i++) {
+                const space = document.createElement('div');
+                space.className = 'space-cell';
+                actinidesContainer.appendChild(space);
+            }
+            
+            actinides.forEach(el => {
+                const cell = document.createElement('div');
+                cell.className = `cell ${getGroupClass(el.group)}`;
+                cell.dataset.z = el.z;
+                cell.innerHTML = `
+                    <div class="num">${el.z}</div>
+                    <div class="sym">${el.sym}</div>
+                    <div class="ename">${el.name}</div>
+                `;
+                cell.addEventListener('click', () => {
+                    showElementInfo(el);
+                    showScreen('main');
+                });
+                actinidesContainer.appendChild(cell);
+                allCells.push(cell);
+            });
+        }
+
+        // Funciones para cambiar entre pantallas
+        function showScreen(screen) {
+            mainScreen.style.display = 'none';
+            tableScreen.style.display = 'none';
+            
+            switch(screen) {
+                case 'main':
+                    mainScreen.style.display = 'flex';
+                    break;
+                case 'table':
+                    tableScreen.style.display = 'block';
+                    // Asegurar que el botón Familia esté activo y se apliquen los colores de familia
+                    toggleNormal.classList.add('active');
+                    restoreNormalColors();
+                    break;
+            }
+        }
+
+        // Event listeners
+        showTableBtn.addEventListener('click', () => {
+            showScreen('table');
+            createPeriodicTable();
+        });
+
+        showOrbitalsBtn.addEventListener('click', () => {
+            // Redirigir a la web especificada
+            window.location.href = './Orbitalak/';
+        });
+
+        showValenceBtn.addEventListener('click', () => {
+            // Redirigir a la web especificada
+            window.location.href = './BalentzienTaula/';
+        });
+
+        // NUEVOS EVENT LISTENERS PARA LOS BOTONES AÑADIDOS
+        showCompoundsBtn.addEventListener('click', () => {
+            // Redirigir a la web especificada
+            window.location.href = './KonposatuInorganiko/';
+        });
+
+        showCalculatorBtn.addEventListener('click', () => {
+            // Redirigir a la web especificada
+            window.location.href = './Kalkulagailu/';
+        });
+
+        backFromTableBtn.addEventListener('click', () => {
+            showScreen('main');
+        });
+
+        // Toggle para menú retráctil
+        controlsCollapsible.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        // Toggles para cambiar modo de visualización de la tabla
+        toggleElec.addEventListener('click', () => {
+            // Desactivar todos los toggles
+            toggleElec.classList.remove('active');
+            toggleElectroneg.classList.remove('active');
+            toggleRadius.classList.remove('active');
+            toggleIonization.classList.remove('active');
+            toggleNormal.classList.remove('active');
+            
+            // Activar solo este toggle
+            toggleElec.classList.add('active');
+            
+            // Aplicar colores
+            applyElectronBlockColors();
+        });
+
+        toggleElectroneg.addEventListener('click', () => {
+            // Desactivar todos los toggles
+            toggleElec.classList.remove('active');
+            toggleElectroneg.classList.remove('active');
+            toggleRadius.classList.remove('active');
+            toggleIonization.classList.remove('active');
+            toggleNormal.classList.remove('active');
+            
+            // Activar solo este toggle
+            toggleElectroneg.classList.add('active');
+            
+            // Aplicar colores
+            applyElectronegativityColors();
+        });
+
+        toggleRadius.addEventListener('click', () => {
+            // Desactivar todos los toggles
+            toggleElec.classList.remove('active');
+            toggleElectroneg.classList.remove('active');
+            toggleRadius.classList.remove('active');
+            toggleIonization.classList.remove('active');
+            toggleNormal.classList.remove('active');
+            
+            // Activar solo este toggle
+            toggleRadius.classList.add('active');
+            
+            // Aplicar colores
+            applyAtomicRadiusColors();
+        });
+
+        toggleIonization.addEventListener('click', () => {
+            // Desactivar todos los toggles
+            toggleElec.classList.remove('active');
+            toggleElectroneg.classList.remove('active');
+            toggleRadius.classList.remove('active');
+            toggleIonization.classList.remove('active');
+            toggleNormal.classList.remove('active');
+            
+            // Activar solo este toggle
+            toggleIonization.classList.add('active');
+            
+            // Aplicar colores
+            applyIonizationColors();
+        });
+
+        toggleNormal.addEventListener('click', () => {
+            // Desactivar todos los toggles
+            toggleElec.classList.remove('active');
+            toggleElectroneg.classList.remove('active');
+            toggleRadius.classList.remove('active');
+            toggleIonization.classList.remove('active');
+            toggleNormal.classList.remove('active');
+            
+            // Activar solo este toggle
+            toggleNormal.classList.add('active');
+            
+            // Restaurar colores normales
+            restoreNormalColors();
+        });
+
+        // Inicialización
+        createPeriodicTable();
+        showElementInfo(elements[0]);
+    </script>
+</body>
+
+</html>
+
+
+
+
+
