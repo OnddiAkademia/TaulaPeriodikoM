@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="eu">
+<head>
+<meta charset="utf-8">
+<title>Konposatu Inorganikoak</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f1f8e9">
+<style>
+:root{
+  --bg:#f1f8e9;
+  --card:#fff;
+  --accent:#7a9c89;
+  --accent-dark:#5a7b68;
+  --text:#2c3e50;
+  --soft:#7f8c8d;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,system-ui}
+body{display:flex;flex-direction:column;height:100vh;background:var(--bg);color:var(--text)}
+header{
+  position:sticky;top:0;z-index:10;display:flex;align-items:center;padding:12px 16px;
+  background:var(--card);box-shadow:0 2px 4px rgba(0,0,0,.08);height:56px}
+#search{
+  flex:1;border:1px solid #d0e0d7;border-radius:24px;padding:8px 14px;font-size:16px}
+#counter{
+  margin-left:12px;width:30px;height:30px;border-radius:50%;background:var(--accent);
+  color:#fff;display:grid;place-items:center;font-weight:bold}
+#results-wrapper{
+  flex:1;overflow-y:auto;padding:16px 12px 24px}
+#results{padding-top:4px}
+.compound-card{
+  background:var(--card);border:1px solid #d0e0d7;border-radius:12px;padding:12px;margin-bottom:8px}
+.compound-name{font-weight:600;margin-bottom:4px}
+.compound-type{font-size:12px;color:var(--soft)}
+.no-results{color:var(--soft);text-align:center;margin-top:24px}
+#selector{
+  position:fixed;inset:0;background:#0009;display:none;flex-direction:column;
+  padding:68px 12px 12px;   /* 56 header + 12 extra */
+  background:#00000066}
+#selector ul{background:var(--card);border-radius:12px;max-height:60vh;overflow-y:auto}
+#selector li{
+  display:flex;align-items:center;padding:12px;border-bottom:1px solid #e0e6e1}
+#selector li:last-child{border:none}
+#selector input{margin-right:12px}
+#selector button{margin-top:12px;width:100%}
+button{
+  border:none;padding:12px;border-radius:24px;background:var(--accent);color:#fff;font-weight:bold}
+.metal{background:#e8f5e9}
+.nonmetal{background:#f5f5f5}
+#reopen{
+  position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:24px;border:none;box-shadow:0 4px 12px rgba(0,0,0,.25);
+  display:none;place-items:center}
+</style>
+</head>
+<body>
+
+<header>
+  <input id="search" placeholder="Elementuak bilatu..." autocomplete="off">
+  <div id="counter">0</div>
+</header>
+
+<div id="results-wrapper">
+  <div id="results"></div>
+</div>
+
+<div id="selector">
+  <ul id="opts"></ul>
+  <button onclick="closeSel()">Itxi</button>
+</div>
+
+<button id="reopen" onclick="reopenKeyboard()">🔍</button>
+
+<script>
+const names={
+  H:"Hidrogeno",O:"Oxigeno",F:"Fluor",Cl:"Kloro",Br:"Bromo",I:"Iodo",
+  S:"Sufre",Se:"Selenio",Te:"Telurio",N:"Nitrogeno",P:"Fosforo",As:"Artseniko",Sb:"Antimonio",
+  C:"Karbono",Si:"Silizio",B:"Boro",
+  Li:"Litio",Na:"Sodio",K:"Potasio",Rb:"Rubidio",Cs:"Zesio",Fr:"Frantzio",Ag:"Zilar",
+  Be:"Berilio",Mg:"Magnesio",Ca:"Kaltzio",Sr:"Estrontzio",Ba:"Bario",Ra:"Radio",Zn:"Zink",Cd:"Kadmio",
+  Cu:"Kobre",Hg:"Merkurio",Au:"Urrea",Fe:"Burdina",Co:"Kobalto",Ni:"Nikel",Cr:"Kromo",Mn:"Manganeso",Al:"Aluminio",
+  Sn:"Eztainu",Pb:"Beruna",Bi:"Bismuto"
+};
+const db = {
+            // OXIDOA
+            oxid: [
+                // Metal alkainoak (balentzia +1)
+                { formula: "Li₂O", name: "Litio oxidoa", elements: ["Li", "O"], type: "Oxidoa" },
+                { formula: "Na₂O", name: "Sodio oxidoa", elements: ["Na", "O"], type: "Oxidoa" },
+                { formula: "K₂O", name: "Potasio oxidoa", elements: ["K", "O"], type: "Oxidoa" },
+                { formula: "Rb₂O", name: "Rubidio oxidoa", elements: ["Rb", "O"], type: "Oxidoa" },
+                { formula: "Cs₂O", name: "Zesio oxidoa", elements: ["Cs", "O"], type: "Oxidoa" },
+                { formula: "Fr₂O", name: "Frantzio oxidoa", elements: ["Fr", "O"], type: "Oxidoa" },
+                { formula: "Ag₂O", name: "Zilar oxidoa", elements: ["Ag", "O"], type: "Oxidoa" },
+                
+                // Metal alkainolurrekoak (balentzia +2)
+                { formula: "BeO", name: "Berilio oxidoa", elements: ["Be", "O"], type: "Oxidoa" },
+                { formula: "MgO", name: "Magnesio oxidoa", elements: ["Mg", "O"], type: "Oxidoa" },
+                { formula: "CaO", name: "Kaltzio oxidoa", elements: ["Ca", "O"], type: "Oxidoa" },
+                { formula: "SrO", name: "Estrontzio oxidoa", elements: ["Sr", "O"], type: "Oxidoa" },
+                { formula: "BaO", name: "Bario oxidoa", elements: ["Ba", "O"], type: "Oxidoa" },
+                { formula: "RaO", name: "Radio oxidoa", elements: ["Ra", "O"], type: "Oxidoa" },
+                { formula: "ZnO", name: "Zink oxidoa", elements: ["Zn", "O"], type: "Oxidoa" },
+                { formula: "CdO", name: "Kadmio oxidoa", elements: ["Cd", "O"], type: "Oxidoa" },
+                
+                // Metal balentzia anitakoak
+                { formula: "Cu₂O", name: "Kobre(I) oxidoa", elements: ["Cu", "O"], type: "Oxidoa" },
+                { formula: "CuO", name: "Kobre(II) oxidoa", elements: ["Cu", "O"], type: "Oxidoa" },
+                { formula: "Hg₂O", name: "Merkurio(I) oxidoa", elements: ["Hg", "O"], type: "Oxidoa" },
+                { formula: "HgO", name: "Merkurio(II) oxidoa", elements: ["Hg", "O"], type: "Oxidoa" },
+                { formula: "Au₂O", name: "Urre(I) oxidoa", elements: ["Au", "O"], type: "Oxidoa" },
+                { formula: "Au₂O₃", name: "Urre(III) oxidoa", elements: ["Au", "O"], type: "Oxidoa" },
+                { formula: "FeO", name: "Burdin(II) oxidoa", elements: ["Fe", "O"], type: "Oxidoa" },
+                { formula: "Fe₂O₃", name: "Burdin(III) oxidoa", elements: ["Fe", "O"], type: "Oxidoa" },
+                { formula: "CoO", name: "Kobalto(II) oxidoa", elements: ["Co", "O"], type: "Oxidoa" },
+                { formula: "Co₂O₃", name: "Kobalto(III) oxidoa", elements: ["Co", "O"], type: "Oxidoa" },
+                { formula: "NiO", name: "Nikel(II) oxidoa", elements: ["Ni", "O"], type: "Oxidoa" },
+                { formula: "Ni₂O₃", name: "Nikel(III) oxidoa", elements: ["Ni", "O"], type: "Oxidoa" },
+                { formula: "CrO", name: "Kromo(II) oxidoa", elements: ["Cr", "O"], type: "Oxidoa" },
+                { formula: "Cr₂O₃", name: "Kromo(III) oxidoa", elements: ["Cr", "O"], type: "Oxidoa" },
+                { formula: "CrO₃", name: "Kromo(VI) oxidoa", elements: ["Cr", "O"], type: "Oxidoa" },
+                { formula: "MnO", name: "Manganeso(II) oxidoa", elements: ["Mn", "O"], type: "Oxidoa" },
+                { formula: "Mn₂O₃", name: "Manganeso(III) oxidoa", elements: ["Mn", "O"], type: "Oxidoa" },
+                { formula: "MnO₂", name: "Manganeso(IV) oxidoa", elements: ["Mn", "O"], type: "Oxidoa" },
+                { formula: "Al₂O₃", name: "Aluminio oxidoa", elements: ["Al", "O"], type: "Oxidoa" },
+                { formula: "SnO", name: "Eztainu(II) oxidoa", elements: ["Sn", "O"], type: "Oxidoa" },
+                { formula: "SnO₂", name: "Eztainu(IV) oxidoa", elements: ["Sn", "O"], type: "Oxidoa" },
+                { formula: "PbO", name: "Berun(II) oxidoa", elements: ["Pb", "O"], type: "Oxidoa" },
+                { formula: "PbO₂", name: "Berun(IV) oxidoa", elements: ["Pb", "O"], type: "Oxidoa" },
+                { formula: "Bi₂O₃", name: "Bismuto(III) oxidoa", elements: ["Bi", "O"], type: "Oxidoa" },
+                { formula: "Bi₂O₅", name: "Bismuto(V) oxidoa", elements: ["Bi", "O"], type: "Oxidoa" },
+				
+				//Oxido ez metalikoak
+				{ formula: "H₂O",      name: "Hidrogeno oxidoa / Ura",              elements: ["H", "O"],  type: "Oxidoa" },
+				{ formula: "H₂O₂",     name: "Hidrogeno peroxidoa / Ur oxigenatua",                elements: ["H", "O"],  type: "Peroxidoa" },
+
+				// Halógenos
+				{ formula: "F₂O",      name: "Fluor(I) oxidoa",          elements: ["F", "O"],  type: "Oxidoa" },
+				
+				{ formula: "Cl₂O",     name: "Kloro(I) oxidoa",          elements: ["Cl", "O"], type: "Oxidoa" },
+				{ formula: "Cl₂O₃",    name: "Kloro(III) oxidoa",        elements: ["Cl", "O"], type: "Oxidoa" },
+				{ formula: "Cl₂O₅",     name: "Kloro(V) oxidoa",           elements: ["Cl", "O"],  type: "Oxidoa" },
+				{ formula: "Cl₂O₇",    name: "Kloro(VII) oxidoa",        elements: ["Cl", "O"], type: "Oxidoa" },
+
+				{ formula: "Br₂O",     name: "Bromo(I) oxidoa",          elements: ["Br", "O"], type: "Oxidoa" },
+				{ formula: "Br₂O₃",    name: "Bromo(III) oxidoa",        elements: ["Br", "O"], type: "Oxidoa" },
+				{ formula: "Br₂O₅",     name: "Bromo(V) oxidoa",           elements: ["Br", "O"],  type: "Oxidoa" },
+				{ formula: "Br₂O₇",    name: "Bromo(VII) oxidoa",        elements: ["Br", "O"], type: "Oxidoa" },
+
+				{ formula: "I₂O",      name: "Iodo(I) oxidoa",           elements: ["I", "O"],  type: "Oxidoa" },
+				{ formula: "I₂O₃",     name: "Iodo(III) oxidoa",         elements: ["I", "O"],  type: "Oxidoa" },
+				{ formula: "I₂O₅",     name: "Iodo(V) oxidoa",           elements: ["I", "O"],  type: "Oxidoa" },
+				{ formula: "I₂O₇",     name: "Iodo(VII) oxidoa",         elements: ["I", "O"],  type: "Oxidoa" },
+	
+				// Calcógenos (S, Se, Te)
+				{ formula: "SO",       name: "Sufre(II) oxidoa",         elements: ["S", "O"],  type: "Oxidoa" },
+				{ formula: "SO₂",      name: "Sufre(IV) oxidoa",         elements: ["S", "O"],  type: "Oxidoa" },
+				{ formula: "SO₃",      name: "Sufre(VI) oxidoa",         elements: ["S", "O"],  type: "Oxidoa" },
+
+				{ formula: "SeO",      name: "Selenio(II) oxidoa",       elements: ["Se", "O"], type: "Oxidoa" },
+				{ formula: "SeO₂",     name: "Selenio(IV) oxidoa",       elements: ["Se", "O"], type: "Oxidoa" },
+				{ formula: "SeO₃",     name: "Selenio(VI) oxidoa",       elements: ["Se", "O"], type: "Oxidoa" },
+
+				{ formula: "TeO",      name: "Telurio(II) oxidoa",       elements: ["Te", "O"], type: "Oxidoa" },
+				{ formula: "TeO₂",     name: "Telurio(IV) oxidoa",       elements: ["Te", "O"], type: "Oxidoa" },
+				{ formula: "TeO₃",     name: "Telurio(VI) oxidoa",       elements: ["Te", "O"], type: "Oxidoa" },
+
+				// Pnictógenos (N, P, As, Sb)
+				{ formula: "N₂O",      name: "Nitrogeno(I) oxidoa",      elements: ["N", "O"],  type: "Oxidoa" },
+				{ formula: "NO",       name: "Nitrogeno(II) oxidoa",     elements: ["N", "O"],  type: "Oxidoa" },
+				{ formula: "N₂O₃",     name: "Nitrogeno(III) oxidoa",    elements: ["N", "O"],  type: "Oxidoa" },
+				{ formula: "NO₂",      name: "Nitrogeno(IV) oxidoa",     elements: ["N", "O"],  type: "Oxidoa" },
+				{ formula: "N₂O₅",     name: "Nitrogeno(V) oxidoa",      elements: ["N", "O"],  type: "Oxidoa" },
+
+				{ formula: "P₂O₃",     name: "Fosforo(III) oxidoa",      elements: ["P", "O"],  type: "Oxidoa" },
+				{ formula: "P₂O₅",    name: "Fosforo(V) oxidoa",        elements: ["P", "O"],  type: "Oxidoa" },
+
+				{ formula: "As₂O₃",    name: "Artseniko(III) oxidoa",    elements: ["As", "O"], type: "Oxidoa" },
+				{ formula: "As₂O₅",    name: "Artseniko(V) oxidoa",      elements: ["As", "O"], type: "Oxidoa" },
+
+				{ formula: "Sb₂O₃",    name: "Antimonio(III) oxidoa",    elements: ["Sb", "O"], type: "Oxidoa" },
+				{ formula: "Sb₂O₅",    name: "Antimonio(V) oxidoa",      elements: ["Sb", "O"], type: "Oxidoa" },
+
+				// Carbonoide (C, Si, B)
+				{ formula: "CO",       name: "Karbono(II) oxidoa",       elements: ["C", "O"],  type: "Oxidoa" },
+				{ formula: "CO₂",      name: "Karbono(IV) oxidoa",       elements: ["C", "O"],  type: "Oxidoa" },
+
+				{ formula: "SiO",      name: "Silizio(II) oxidoa",       elements: ["Si", "O"], type: "Oxidoa" },
+				{ formula: "SiO₂",     name: "Silizio(IV) oxidoa",       elements: ["Si", "O"], type: "Oxidoa" },
+
+				{ formula: "B₂O₃",     name: "Boro(III) oxidoa",         elements: ["B", "O"],  type: "Oxidoa" },
+            ],
+            
+            // GATZ BITARRAK - COMPLETA
+            gatz: [
+                // CON HALÓGENOS (F, Cl, Br, I) - TODOS LOS METALES
+                { formula: "LiF", name: "Litio fluoruroa", elements: ["Li", "F"], type: "Gatz bitarra" },
+                { formula: "LiCl", name: "Litio kloruroa", elements: ["Li", "Cl"], type: "Gatz bitarra" },
+                { formula: "LiBr", name: "Litio bromuroa", elements: ["Li", "Br"], type: "Gatz bitarra" },
+                { formula: "LiI", name: "Litio yoduroa", elements: ["Li", "I"], type: "Gatz bitarra" },
+                
+                { formula: "NaF", name: "Sodio fluoruroa", elements: ["Na", "F"], type: "Gatz bitarra" },
+                { formula: "NaCl", name: "Sodio kloruroa", elements: ["Na", "Cl"], type: "Gatz bitarra" },
+                { formula: "NaBr", name: "Sodio bromuroa", elements: ["Na", "Br"], type: "Gatz bitarra" },
+                { formula: "NaI", name: "Sodio yoduroa", elements: ["Na", "I"], type: "Gatz bitarra" },
+                
+                { formula: "KF", name: "Potasio fluoruroa", elements: ["K", "F"], type: "Gatz bitarra" },
+                { formula: "KCl", name: "Potasio kloruroa", elements: ["K", "Cl"], type: "Gatz bitarra" },
+                { formula: "KBr", name: "Potasio bromuroa", elements: ["K", "Br"], type: "Gatz bitarra" },
+                { formula: "KI", name: "Potasio yoduroa", elements: ["K", "I"], type: "Gatz bitarra" },
+                
+                { formula: "RbF", name: "Rubidio fluoruroa", elements: ["Rb", "F"], type: "Gatz bitarra" },
+                { formula: "RbCl", name: "Rubidio kloruroa", elements: ["Rb", "Cl"], type: "Gatz bitarra" },
+                { formula: "RbBr", name: "Rubidio bromuroa", elements: ["Rb", "Br"], type: "Gatz bitarra" },
+                { formula: "RbI", name: "Rubidio yoduroa", elements: ["Rb", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CsF", name: "Zesio fluoruroa", elements: ["Cs", "F"], type: "Gatz bitarra" },
+                { formula: "CsCl", name: "Zesio kloruroa", elements: ["Cs", "Cl"], type: "Gatz bitarra" },
+                { formula: "CsBr", name: "Zesio bromuroa", elements: ["Cs", "Br"], type: "Gatz bitarra" },
+                { formula: "CsI", name: "Zesio yoduroa", elements: ["Cs", "I"], type: "Gatz bitarra" },
+                
+                { formula: "FrF", name: "Frantzio fluoruroa", elements: ["Fr", "F"], type: "Gatz bitarra" },
+                { formula: "FrCl", name: "Frantzio kloruroa", elements: ["Fr", "Cl"], type: "Gatz bitarra" },
+                { formula: "FrBr", name: "Frantzio bromuroa", elements: ["Fr", "Br"], type: "Gatz bitarra" },
+                { formula: "FrI", name: "Frantzio yoduroa", elements: ["Fr", "I"], type: "Gatz bitarra" },
+                
+                // METALES ALCALINOTÉRREOS
+                { formula: "BeF₂", name: "Berilio fluoruroa", elements: ["Be", "F"], type: "Gatz bitarra" },
+                { formula: "BeCl₂", name: "Berilio kloruroa", elements: ["Be", "Cl"], type: "Gatz bitarra" },
+                { formula: "BeBr₂", name: "Berilio bromuroa", elements: ["Be", "Br"], type: "Gatz bitarra" },
+                { formula: "BeI₂", name: "Berilio yoduroa", elements: ["Be", "I"], type: "Gatz bitarra" },
+                
+                { formula: "MgF₂", name: "Magnesio fluoruroa", elements: ["Mg", "F"], type: "Gatz bitarra" },
+                { formula: "MgCl₂", name: "Magnesio kloruroa", elements: ["Mg", "Cl"], type: "Gatz bitarra" },
+                { formula: "MgBr₂", name: "Magnesio bromuroa", elements: ["Mg", "Br"], type: "Gatz bitarra" },
+                { formula: "MgI₂", name: "Magnesio yoduroa", elements: ["Mg", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CaF₂", name: "Kaltzio fluoruroa", elements: ["Ca", "F"], type: "Gatz bitarra" },
+                { formula: "CaCl₂", name: "Kaltzio kloruroa", elements: ["Ca", "Cl"], type: "Gatz bitarra" },
+                { formula: "CaBr₂", name: "Kaltzio bromuroa", elements: ["Ca", "Br"], type: "Gatz bitarra" },
+                { formula: "CaI₂", name: "Kaltzio yoduroa", elements: ["Ca", "I"], type: "Gatz bitarra" },
+                
+                { formula: "SrF₂", name: "Estrontzio fluoruroa", elements: ["Sr", "F"], type: "Gatz bitarra" },
+                { formula: "SrCl₂", name: "Estrontzio kloruroa", elements: ["Sr", "Cl"], type: "Gatz bitarra" },
+                { formula: "SrBr₂", name: "Estrontzio bromuroa", elements: ["Sr", "Br"], type: "Gatz bitarra" },
+                { formula: "SrI₂", name: "Estrontzio yoduroa", elements: ["Sr", "I"], type: "Gatz bitarra" },
+                
+                { formula: "BaF₂", name: "Bario fluoruroa", elements: ["Ba", "F"], type: "Gatz bitarra" },
+                { formula: "BaCl₂", name: "Bario kloruroa", elements: ["Ba", "Cl"], type: "Gatz bitarra" },
+                { formula: "BaBr₂", name: "Bario bromuroa", elements: ["Ba", "Br"], type: "Gatz bitarra" },
+                { formula: "BaI₂", name: "Bario yoduroa", elements: ["Ba", "I"], type: "Gatz bitarra" },
+                
+                { formula: "RaF₂", name: "Radio fluoruroa", elements: ["Ra", "F"], type: "Gatz bitarra" },
+                { formula: "RaCl₂", name: "Radio kloruroa", elements: ["Ra", "Cl"], type: "Gatz bitarra" },
+                { formula: "RaBr₂", name: "Radio bromuroa", elements: ["Ra", "Br"], type: "Gatz bitarra" },
+                { formula: "RaI₂", name: "Radio yoduroa", elements: ["Ra", "I"], type: "Gatz bitarra" },
+                
+                // METALES DE TRANSICIÓN Y OTROS
+                { formula: "ZnF₂", name: "Zink fluoruroa", elements: ["Zn", "F"], type: "Gatz bitarra" },
+                { formula: "ZnCl₂", name: "Zink kloruroa", elements: ["Zn", "Cl"], type: "Gatz bitarra" },
+                { formula: "ZnBr₂", name: "Zink bromuroa", elements: ["Zn", "Br"], type: "Gatz bitarra" },
+                { formula: "ZnI₂", name: "Zink yoduroa", elements: ["Zn", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CdF₂", name: "Kadmio fluoruroa", elements: ["Cd", "F"], type: "Gatz bitarra" },
+                { formula: "CdCl₂", name: "Kadmio kloruroa", elements: ["Cd", "Cl"], type: "Gatz bitarra" },
+                { formula: "CdBr₂", name: "Kadmio bromuroa", elements: ["Cd", "Br"], type: "Gatz bitarra" },
+                { formula: "CdI₂", name: "Kadmio yoduroa", elements: ["Cd", "I"], type: "Gatz bitarra" },
+                
+                // COBRE - TODAS LAS VALENCIAS
+                { formula: "CuF", name: "Kobre(I) fluoruroa", elements: ["Cu", "F"], type: "Gatz bitarra" },
+                { formula: "CuCl", name: "Kobre(I) kloruroa", elements: ["Cu", "Cl"], type: "Gatz bitarra" },
+                { formula: "CuBr", name: "Kobre(I) bromuroa", elements: ["Cu", "Br"], type: "Gatz bitarra" },
+                { formula: "CuI", name: "Kobre(I) yoduroa", elements: ["Cu", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CuF₂", name: "Kobre(II) fluoruroa", elements: ["Cu", "F"], type: "Gatz bitarra" },
+                { formula: "CuCl₂", name: "Kobre(II) kloruroa", elements: ["Cu", "Cl"], type: "Gatz bitarra" },
+                { formula: "CuBr₂", name: "Kobre(II) bromuroa", elements: ["Cu", "Br"], type: "Gatz bitarra" },
+                { formula: "CuI₂", name: "Kobre(II) yoduroa", elements: ["Cu", "I"], type: "Gatz bitarra" },
+                
+                // MERCURIO
+                { formula: "HgF", name: "Merkurio(I) fluoruroa", elements: ["Hg", "F"], type: "Gatz bitarra" },
+                { formula: "HgCl", name: "Merkurio(I) kloruroa", elements: ["Hg", "Cl"], type: "Gatz bitarra" },
+                { formula: "HgBr", name: "Merkurio(I) bromuroa", elements: ["Hg", "Br"], type: "Gatz bitarra" },
+                { formula: "HgI", name: "Merkurio(I) yoduroa", elements: ["Hg", "I"], type: "Gatz bitarra" },
+                
+                { formula: "HgF₂", name: "Merkurio(II) fluoruroa", elements: ["Hg", "F"], type: "Gatz bitarra" },
+                { formula: "HgCl₂", name: "Merkurio(II) kloruroa", elements: ["Hg", "Cl"], type: "Gatz bitarra" },
+                { formula: "HgBr₂", name: "Merkurio(II) bromuroa", elements: ["Hg", "Br"], type: "Gatz bitarra" },
+                { formula: "HgI₂", name: "Merkurio(II) yoduroa", elements: ["Hg", "I"], type: "Gatz bitarra" },
+                
+                // ORO - METAL NOBLE (pocos compuestos estables)
+                { formula: "AuF", name: "Urrea(I) fluoruroa", elements: ["Au", "F"], type: "Gatz bitarra" },
+                { formula: "AuCl", name: "Urrea(I) kloruroa", elements: ["Au", "Cl"], type: "Gatz bitarra" },
+                { formula: "AuBr", name: "Urrea(I) bromuroa", elements: ["Au", "Br"], type: "Gatz bitarra" },
+                { formula: "AuI", name: "Urrea(I) yoduroa", elements: ["Au", "I"], type: "Gatz bitarra" },
+                
+                { formula: "AuF₃", name: "Urrea(III) fluoruroa", elements: ["Au", "F"], type: "Gatz bitarra" },
+                { formula: "AuCl₃", name: "Urrea(III) kloruroa", elements: ["Au", "Cl"], type: "Gatz bitarra" },
+                { formula: "AuBr₃", name: "Urrea(III) bromuroa", elements: ["Au", "Br"], type: "Gatz bitarra" },
+                { formula: "AuI₃", name: "Urrea(III) yoduroa", elements: ["Au", "I"], type: "Gatz bitarra" },
+                
+                // PLATA - METAL NOBLE
+                { formula: "AgF", name: "Zilar fluoruroa", elements: ["Ag", "F"], type: "Gatz bitarra" },
+                { formula: "AgCl", name: "Zilar kloruroa", elements: ["Ag", "Cl"], type: "Gatz bitarra" },
+                { formula: "AgBr", name: "Zilar bromuroa", elements: ["Ag", "Br"], type: "Gatz bitarra" },
+                { formula: "AgI", name: "Zilar yoduroa", elements: ["Ag", "I"], type: "Gatz bitarra" },
+                
+                // HIERRO
+                { formula: "FeF₂", name: "Burdin(II) fluoruroa", elements: ["Fe", "F"], type: "Gatz bitarra" },
+                { formula: "FeCl₂", name: "Burdin(II) kloruroa", elements: ["Fe", "Cl"], type: "Gatz bitarra" },
+                { formula: "FeBr₂", name: "Burdin(II) bromuroa", elements: ["Fe", "Br"], type: "Gatz bitarra" },
+                { formula: "FeI₂", name: "Burdin(II) yoduroa", elements: ["Fe", "I"], type: "Gatz bitarra" },
+                
+                { formula: "FeF₃", name: "Burdin(III) fluoruroa", elements: ["Fe", "F"], type: "Gatz bitarra" },
+                { formula: "FeCl₃", name: "Burdin(III) kloruroa", elements: ["Fe", "Cl"], type: "Gatz bitarra" },
+                { formula: "FeBr₃", name: "Burdin(III) bromuroa", elements: ["Fe", "Br"], type: "Gatz bitarra" },
+                { formula: "FeI₃", name: "Burdin(III) yoduroa", elements: ["Fe", "I"], type: "Gatz bitarra" },
+                
+                // COBALTO
+                { formula: "CoF₂", name: "Kobalto(II) fluoruroa", elements: ["Co", "F"], type: "Gatz bitarra" },
+                { formula: "CoCl₂", name: "Kobalto(II) kloruroa", elements: ["Co", "Cl"], type: "Gatz bitarra" },
+                { formula: "CoBr₂", name: "Kobalto(II) bromuroa", elements: ["Co", "Br"], type: "Gatz bitarra" },
+                { formula: "CoI₂", name: "Kobalto(II) yoduroa", elements: ["Co", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CoF₃", name: "Kobalto(III) fluoruroa", elements: ["Co", "F"], type: "Gatz bitarra" },
+                { formula: "CoCl₃", name: "Kobalto(III) kloruroa", elements: ["Co", "Cl"], type: "Gatz bitarra" },
+                { formula: "CoBr₃", name: "Kobalto(III) bromuroa", elements: ["Co", "Br"], type: "Gatz bitarra" },
+                { formula: "CoI₃", name: "Kobalto(III) yoduroa", elements: ["Co", "I"], type: "Gatz bitarra" },
+                
+                // NIQUEL
+                { formula: "NiF₂", name: "Nikel(II) fluoruroa", elements: ["Ni", "F"], type: "Gatz bitarra" },
+                { formula: "NiCl₂", name: "Nikel(II) kloruroa", elements: ["Ni", "Cl"], type: "Gatz bitarra" },
+                { formula: "NiBr₂", name: "Nikel(II) bromuroa", elements: ["Ni", "Br"], type: "Gatz bitarra" },
+                { formula: "NiI₂", name: "Nikel(II) yoduroa", elements: ["Ni", "I"], type: "Gatz bitarra" },
+                
+                { formula: "NiF₃", name: "Nikel(III) fluoruroa", elements: ["Ni", "F"], type: "Gatz bitarra" },
+                { formula: "NiCl₃", name: "Nikel(III) kloruroa", elements: ["Ni", "Cl"], type: "Gatz bitarra" },
+                { formula: "NiBr₃", name: "Nikel(III) bromuroa", elements: ["Ni", "Br"], type: "Gatz bitarra" },
+                { formula: "NiI₃", name: "Nikel(III) yoduroa", elements: ["Ni", "I"], type: "Gatz bitarra" },
+                
+                // CROMO
+                { formula: "CrF₂", name: "Kromo(II) fluoruroa", elements: ["Cr", "F"], type: "Gatz bitarra" },
+                { formula: "CrCl₂", name: "Kromo(II) kloruroa", elements: ["Cr", "Cl"], type: "Gatz bitarra" },
+                { formula: "CrBr₂", name: "Kromo(II) bromuroa", elements: ["Cr", "Br"], type: "Gatz bitarra" },
+                { formula: "CrI₂", name: "Kromo(II) yoduroa", elements: ["Cr", "I"], type: "Gatz bitarra" },
+                
+                { formula: "CrF₃", name: "Kromo(III) fluoruroa", elements: ["Cr", "F"], type: "Gatz bitarra" },
+                { formula: "CrCl₃", name: "Kromo(III) kloruroa", elements: ["Cr", "Cl"], type: "Gatz bitarra" },
+                { formula: "CrBr₃", name: "Kromo(III) bromuroa", elements: ["Cr", "Br"], type: "Gatz bitarra" },
+                { formula: "CrI₃", name: "Kromo(III) yoduroa", elements: ["Cr", "I"], type: "Gatz bitarra" },
+                
+                // MANGANESO
+                { formula: "MnF₂", name: "Manganeso(II) fluoruroa", elements: ["Mn", "F"], type: "Gatz bitarra" },
+                { formula: "MnCl₂", name: "Manganeso(II) kloruroa", elements: ["Mn", "Cl"], type: "Gatz bitarra" },
+                { formula: "MnBr₂", name: "Manganeso(II) bromuroa", elements: ["Mn", "Br"], type: "Gatz bitarra" },
+                { formula: "MnI₂", name: "Manganeso(II) yoduroa", elements: ["Mn", "I"], type: "Gatz bitarra" },
+                
+                { formula: "MnF₃", name: "Manganeso(III) fluoruroa", elements: ["Mn", "F"], type: "Gatz bitarra" },
+                { formula: "MnCl₃", name: "Manganeso(III) kloruroa", elements: ["Mn", "Cl"], type: "Gatz bitarra" },
+                { formula: "MnBr₃", name: "Manganeso(III) bromuroa", elements: ["Mn", "Br"], type: "Gatz bitarra" },
+                { formula: "MnI₃", name: "Manganeso(III) yoduroa", elements: ["Mn", "I"], type: "Gatz bitarra" },
+                
+                // ALUMINIO
+                { formula: "AlF₃", name: "Aluminio fluoruroa", elements: ["Al", "F"], type: "Gatz bitarra" },
+                { formula: "AlCl₃", name: "Aluminio kloruroa", elements: ["Al", "Cl"], type: "Gatz bitarra" },
+                { formula: "AlBr₃", name: "Aluminio bromuroa", elements: ["Al", "Br"], type: "Gatz bitarra" },
+                { formula: "AlI₃", name: "Aluminio yoduroa", elements: ["Al", "I"], type: "Gatz bitarra" },
+                
+                // ESTAÑO
+                { formula: "SnF₂", name: "Eztainu(II) fluoruroa", elements: ["Sn", "F"], type: "Gatz bitarra" },
+                { formula: "SnCl₂", name: "Eztainu(II) kloruroa", elements: ["Sn", "Cl"], type: "Gatz bitarra" },
+                { formula: "SnBr₂", name: "Eztainu(II) bromuroa", elements: ["Sn", "Br"], type: "Gatz bitarra" },
+                { formula: "SnI₂", name: "Eztainu(II) yoduroa", elements: ["Sn", "I"], type: "Gatz bitarra" },
+                
+                { formula: "SnF₄", name: "Eztainu(IV) fluoruroa", elements: ["Sn", "F"], type: "Gatz bitarra" },
+                { formula: "SnCl₄", name: "Eztainu(IV) kloruroa", elements: ["Sn", "Cl"], type: "Gatz bitarra" },
+                { formula: "SnBr₄", name: "Eztainu(IV) bromuroa", elements: ["Sn", "Br"], type: "Gatz bitarra" },
+                { formula: "SnI₄", name: "Eztainu(IV) yoduroa", elements: ["Sn", "I"], type: "Gatz bitarra" },
+                
+                // PLOMO
+                { formula: "PbF₂", name: "Beruna(II) fluoruroa", elements: ["Pb", "F"], type: "Gatz bitarra" },
+                { formula: "PbCl₂", name: "Beruna(II) kloruroa", elements: ["Pb", "Cl"], type: "Gatz bitarra" },
+                { formula: "PbBr₂", name: "Beruna(II) bromuroa", elements: ["Pb", "Br"], type: "Gatz bitarra" },
+                { formula: "PbI₂", name: "Beruna(II) yoduroa", elements: ["Pb", "I"], type: "Gatz bitarra" },
+                
+                { formula: "PbF₄", name: "Beruna(IV) fluoruroa", elements: ["Pb", "F"], type: "Gatz bitarra" },
+                { formula: "PbCl₄", name: "Beruna(IV) kloruroa", elements: ["Pb", "Cl"], type: "Gatz bitarra" },
+                { formula: "PbBr₄", name: "Beruna(IV) bromuroa", elements: ["Pb", "Br"], type: "Gatz bitarra" },
+                { formula: "PbI₄", name: "Beruna(IV) yoduroa", elements: ["Pb", "I"], type: "Gatz bitarra" },
+                
+                // BISMUTO
+                { formula: "BiF₃", name: "Bismuto(III) fluoruroa", elements: ["Bi", "F"], type: "Gatz bitarra" },
+                { formula: "BiCl₃", name: "Bismuto(III) kloruroa", elements: ["Bi", "Cl"], type: "Gatz bitarra" },
+                { formula: "BiBr₃", name: "Bismuto(III) bromuroa", elements: ["Bi", "Br"], type: "Gatz bitarra" },
+                { formula: "BiI₃", name: "Bismuto(III) yoduroa", elements: ["Bi", "I"], type: "Gatz bitarra" },
+                
+                { formula: "BiF₅", name: "Bismuto(V) fluoruroa", elements: ["Bi", "F"], type: "Gatz bitarra" },
+                { formula: "BiCl₅", name: "Bismuto(V) kloruroa", elements: ["Bi", "Cl"], type: "Gatz bitarra" },
+                { formula: "BiBr₅", name: "Bismuto(V) bromuroa", elements: ["Bi", "Br"], type: "Gatz bitarra" },
+                { formula: "BiI₅", name: "Bismuto(V) yoduroa", elements: ["Bi", "I"], type: "Gatz bitarra" },
+                
+                // CON AZUFRE, SELENIO Y TELURO - TODOS LOS METALES
+                { formula: "Li₂S", name: "Litio sulfuroa", elements: ["Li", "S"], type: "Gatz bitarra" },
+                { formula: "Na₂S", name: "Sodio sulfuroa", elements: ["Na", "S"], type: "Gatz bitarra" },
+                { formula: "K₂S", name: "Potasio sulfuroa", elements: ["K", "S"], type: "Gatz bitarra" },
+                { formula: "Rb₂S", name: "Rubidio sulfuroa", elements: ["Rb", "S"], type: "Gatz bitarra" },
+                { formula: "Cs₂S", name: "Zesio sulfuroa", elements: ["Cs", "S"], type: "Gatz bitarra" },
+                { formula: "Fr₂S", name: "Frantzio sulfuroa", elements: ["Fr", "S"], type: "Gatz bitarra" },
+                
+                { formula: "BeS", name: "Berilio sulfuroa", elements: ["Be", "S"], type: "Gatz bitarra" },
+                { formula: "MgS", name: "Magnesio sulfuroa", elements: ["Mg", "S"], type: "Gatz bitarra" },
+                { formula: "CaS", name: "Kaltzio sulfuroa", elements: ["Ca", "S"], type: "Gatz bitarra" },
+                { formula: "SrS", name: "Estrontzio sulfuroa", elements: ["Sr", "S"], type: "Gatz bitarra" },
+                { formula: "BaS", name: "Bario sulfuroa", elements: ["Ba", "S"], type: "Gatz bitarra" },
+                { formula: "RaS", name: "Radio sulfuroa", elements: ["Ra", "S"], type: "Gatz bitarra" },
+                
+                { formula: "ZnS", name: "Zink sulfuroa", elements: ["Zn", "S"], type: "Gatz bitarra" },
+                { formula: "CdS", name: "Kadmio sulfuroa", elements: ["Cd", "S"], type: "Gatz bitarra" },
+                { formula: "Cu₂S", name: "Kobre(I) sulfuroa", elements: ["Cu", "S"], type: "Gatz bitarra" },
+                { formula: "CuS", name: "Kobre(II) sulfuroa", elements: ["Cu", "S"], type: "Gatz bitarra" },
+                { formula: "HgS", name: "Merkurio(II) sulfuroa", elements: ["Hg", "S"], type: "Gatz bitarra" },
+                { formula: "Ag₂S", name: "Zilar sulfuroa", elements: ["Ag", "S"], type: "Gatz bitarra" },
+                { formula: "Au₂S", name: "Urrea(I) sulfuroa", elements: ["Au", "S"], type: "Gatz bitarra" },
+                { formula: "Au₂S₃", name: "Urrea(III) sulfuroa", elements: ["Au", "S"], type: "Gatz bitarra" },
+                { formula: "FeS", name: "Burdin(II) sulfuroa", elements: ["Fe", "S"], type: "Gatz bitarra" },
+                { formula: "Fe₂S₃", name: "Burdin(III) sulfuroa", elements: ["Fe", "S"], type: "Gatz bitarra" },
+                { formula: "CoS", name: "Kobalto(II) sulfuroa", elements: ["Co", "S"], type: "Gatz bitarra" },
+                { formula: "Co₂S₃", name: "Kobalto(III) sulfuroa", elements: ["Co", "S"], type: "Gatz bitarra" },
+                { formula: "NiS", name: "Nikel(II) sulfuroa", elements: ["Ni", "S"], type: "Gatz bitarra" },
+                { formula: "Ni₂S₃", name: "Nikel(III) sulfuroa", elements: ["Ni", "S"], type: "Gatz bitarra" },
+                { formula: "Cr₂S₃", name: "Kromo(III) sulfuroa", elements: ["Cr", "S"], type: "Gatz bitarra" },
+                { formula: "MnS", name: "Manganeso(II) sulfuroa", elements: ["Mn", "S"], type: "Gatz bitarra" },
+                { formula: "Mn₂S₃", name: "Manganeso(III) sulfuroa", elements: ["Mn", "S"], type: "Gatz bitarra" },
+                { formula: "Al₂S₃", name: "Aluminio sulfuroa", elements: ["Al", "S"], type: "Gatz bitarra" },
+                { formula: "SnS", name: "Eztainu(II) sulfuroa", elements: ["Sn", "S"], type: "Gatz bitarra" },
+                { formula: "SnS₂", name: "Eztainu(IV) sulfuroa", elements: ["Sn", "S"], type: "Gatz bitarra" },
+                { formula: "PbS", name: "Beruna(II) sulfuroa", elements: ["Pb", "S"], type: "Gatz bitarra" },
+                { formula: "PbS₂", name: "Beruna(IV) sulfuroa", elements: ["Pb", "S"], type: "Gatz bitarra" },
+                { formula: "Bi₂S₃", name: "Bismuto(III) sulfuroa", elements: ["Bi", "S"], type: "Gatz bitarra" },
+                
+                // SELENUROS - TODOS LOS METALES
+                { formula: "Li₂Se", name: "Litio selenuroa", elements: ["Li", "Se"], type: "Gatz bitarra" },
+                { formula: "Na₂Se", name: "Sodio selenuroa", elements: ["Na", "Se"], type: "Gatz bitarra" },
+                { formula: "K₂Se", name: "Potasio selenuroa", elements: ["K", "Se"], type: "Gatz bitarra" },
+                { formula: "Rb₂Se", name: "Rubidio selenuroa", elements: ["Rb", "Se"], type: "Gatz bitarra" },
+                { formula: "Cs₂Se", name: "Zesio selenuroa", elements: ["Cs", "Se"], type: "Gatz bitarra" },
+                { formula: "Fr₂Se", name: "Frantzio selenuroa", elements: ["Fr", "Se"], type: "Gatz bitarra" },
+                
+                { formula: "BeSe", name: "Berilio selenuroa", elements: ["Be", "Se"], type: "Gatz bitarra" },
+                { formula: "MgSe", name: "Magnesio selenuroa", elements: ["Mg", "Se"], type: "Gatz bitarra" },
+                { formula: "CaSe", name: "Kaltzio selenuroa", elements: ["Ca", "Se"], type: "Gatz bitarra" },
+                { formula: "SrSe", name: "Estrontzio selenuroa", elements: ["Sr", "Se"], type: "Gatz bitarra" },
+                { formula: "BaSe", name: "Bario selenuroa", elements: ["Ba", "Se"], type: "Gatz bitarra" },
+                { formula: "RaSe", name: "Radio selenuroa", elements: ["Ra", "Se"], type: "Gatz bitarra" },
+                
+                { formula: "ZnSe", name: "Zink selenuroa", elements: ["Zn", "Se"], type: "Gatz bitarra" },
+                { formula: "CdSe", name: "Kadmio selenuroa", elements: ["Cd", "Se"], type: "Gatz bitarra" },
+                { formula: "Cu₂Se", name: "Kobre(I) selenuroa", elements: ["Cu", "Se"], type: "Gatz bitarra" },
+                { formula: "CuSe", name: "Kobre(II) selenuroa", elements: ["Cu", "Se"], type: "Gatz bitarra" },
+                { formula: "HgSe", name: "Merkurio(II) selenuroa", elements: ["Hg", "Se"], type: "Gatz bitarra" },
+                { formula: "Ag₂Se", name: "Zilar selenuroa", elements: ["Ag", "Se"], type: "Gatz bitarra" },
+                { formula: "Au₂Se", name: "Urrea(I) selenuroa", elements: ["Au", "Se"], type: "Gatz bitarra" },
+                { formula: "Au₂Se₃", name: "Urrea(III) selenuroa", elements: ["Au", "Se"], type: "Gatz bitarra" },
+                { formula: "FeSe", name: "Burdin(II) selenuroa", elements: ["Fe", "Se"], type: "Gatz bitarra" },
+                { formula: "Fe₂Se₃", name: "Burdin(III) selenuroa", elements: ["Fe", "Se"], type: "Gatz bitarra" },
+                { formula: "CoSe", name: "Kobalto(II) selenuroa", elements: ["Co", "Se"], type: "Gatz bitarra" },
+                { formula: "Co₂Se₃", name: "Kobalto(III) selenuroa", elements: ["Co", "Se"], type: "Gatz bitarra" },
+                { formula: "NiSe", name: "Nikel(II) selenuroa", elements: ["Ni", "Se"], type: "Gatz bitarra" },
+                { formula: "Ni₂Se₃", name: "Nikel(III) selenuroa", elements: ["Ni", "Se"], type: "Gatz bitarra" },
+                { formula: "Cr₂Se₃", name: "Kromo(III) selenuroa", elements: ["Cr", "Se"], type: "Gatz bitarra" },
+                { formula: "MnSe", name: "Manganeso(II) selenuroa", elements: ["Mn", "Se"], type: "Gatz bitarra" },
+                { formula: "Mn₂Se₃", name: "Manganeso(III) selenuroa", elements: ["Mn", "Se"], type: "Gatz bitarra" },
+                { formula: "Al₂Se₃", name: "Aluminio selenuroa", elements: ["Al", "Se"], type: "Gatz bitarra" },
+                { formula: "SnSe", name: "Eztainu(II) selenuroa", elements: ["Sn", "Se"], type: "Gatz bitarra" },
+                { formula: "SnSe₂", name: "Eztainu(IV) selenuroa", elements: ["Sn", "Se"], type: "Gatz bitarra" },
+                { formula: "PbSe", name: "Beruna(II) selenuroa", elements: ["Pb", "Se"], type: "Gatz bitarra" },
+                { formula: "PbSe₂", name: "Beruna(IV) selenuroa", elements: ["Pb", "Se"], type: "Gatz bitarra" },
+                { formula: "Bi₂Se₃", name: "Bismuto(III) selenuroa", elements: ["Bi", "Se"], type: "Gatz bitarra" },
+                
+                // TELUROS - TODOS LOS METALES
+                { formula: "Li₂Te", name: "Litio teluroa", elements: ["Li", "Te"], type: "Gatz bitarra" },
+                { formula: "Na₂Te", name: "Sodio teluroa", elements: ["Na", "Te"], type: "Gatz bitarra" },
+                { formula: "K₂Te", name: "Potasio teluroa", elements: ["K", "Te"], type: "Gatz bitarra" },
+                { formula: "Rb₂Te", name: "Rubidio teluroa", elements: ["Rb", "Te"], type: "Gatz bitarra" },
+                { formula: "Cs₂Te", name: "Zesio teluroa", elements: ["Cs", "Te"], type: "Gatz bitarra" },
+                { formula: "Fr₂Te", name: "Frantzio teluroa", elements: ["Fr", "Te"], type: "Gatz bitarra" },
+                
+                { formula: "BeTe", name: "Berilio teluroa", elements: ["Be", "Te"], type: "Gatz bitarra" },
+                { formula: "MgTe", name: "Magnesio teluroa", elements: ["Mg", "Te"], type: "Gatz bitarra" },
+                { formula: "CaTe", name: "Kaltzio teluroa", elements: ["Ca", "Te"], type: "Gatz bitarra" },
+                { formula: "SrTe", name: "Estrontzio teluroa", elements: ["Sr", "Te"], type: "Gatz bitarra" },
+                { formula: "BaTe", name: "Bario teluroa", elements: ["Ba", "Te"], type: "Gatz bitarra" },
+                { formula: "RaTe", name: "Radio teluroa", elements: ["Ra", "Te"], type: "Gatz bitarra" },
+                
+                { formula: "ZnTe", name: "Zink teluroa", elements: ["Zn", "Te"], type: "Gatz bitarra" },
+                { formula: "CdTe", name: "Kadmio teluroa", elements: ["Cd", "Te"], type: "Gatz bitarra" },
+                { formula: "Cu₂Te", name: "Kobre(I) teluroa", elements: ["Cu", "Te"], type: "Gatz bitarra" },
+                { formula: "CuTe", name: "Kobre(II) teluroa", elements: ["Cu", "Te"], type: "Gatz bitarra" },
+                { formula: "HgTe", name: "Merkurio(II) teluroa", elements: ["Hg", "Te"], type: "Gatz bitarra" },
+                { formula: "Ag₂Te", name: "Zilar teluroa", elements: ["Ag", "Te"], type: "Gatz bitarra" },
+                { formula: "Au₂Te", name: "Urrea(I) teluroa", elements: ["Au", "Te"], type: "Gatz bitarra" },
+                { formula: "Au₂Te₃", name: "Urrea(III) teluroa", elements: ["Au", "Te"], type: "Gatz bitarra" },
+                { formula: "FeTe", name: "Burdin(II) teluroa", elements: ["Fe", "Te"], type: "Gatz bitarra" },
+                { formula: "Fe₂Te₃", name: "Burdin(III) teluroa", elements: ["Fe", "Te"], type: "Gatz bitarra" },
+                { formula: "CoTe", name: "Kobalto(II) teluroa", elements: ["Co", "Te"], type: "Gatz bitarra" },
+                { formula: "Co₂Te₃", name: "Kobalto(III) teluroa", elements: ["Co", "Te"], type: "Gatz bitarra" },
+                { formula: "NiTe", name: "Nikel(II) teluroa", elements: ["Ni", "Te"], type: "Gatz bitarra" },
+                { formula: "Ni₂Te₃", name: "Nikel(III) teluroa", elements: ["Ni", "Te"], type: "Gatz bitarra" },
+                { formula: "Cr₂Te₃", name: "Kromo(III) teluroa", elements: ["Cr", "Te"], type: "Gatz bitarra" },
+                { formula: "MnTe", name: "Manganeso(II) teluroa", elements: ["Mn", "Te"], type: "Gatz bitarra" },
+                { formula: "Mn₂Te₃", name: "Manganeso(III) teluroa", elements: ["Mn", "Te"], type: "Gatz bitarra" },
+                { formula: "Al₂Te₃", name: "Aluminio teluroa", elements: ["Al", "Te"], type: "Gatz bitarra" },
+                { formula: "SnTe", name: "Eztainu(II) teluroa", elements: ["Sn", "Te"], type: "Gatz bitarra" },
+                { formula: "SnTe₂", name: "Eztainu(IV) teluroa", elements: ["Sn", "Te"], type: "Gatz bitarra" },
+                { formula: "PbTe", name: "Beruna(II) teluroa", elements: ["Pb", "Te"], type: "Gatz bitarra" },
+                { formula: "PbTe₂", name: "Beruna(IV) teluroa", elements: ["Pb", "Te"], type: "Gatz bitarra" },
+                { formula: "Bi₂Te₃", name: "Bismuto(III) teluroa", elements: ["Bi", "Te"], type: "Gatz bitarra" },
+            ],
+            
+            // HIDROXIDOA
+            hidrox: [
+                { formula: "LiOH", name: "Litio hidroxidoa", elements: ["Li", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "NaOH", name: "Sodio hidroxidoa", elements: ["Na", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "KOH", name: "Potasio hidroxidoa", elements: ["K", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "RbOH", name: "Rubidio hidroxidoa", elements: ["Rb", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "CsOH", name: "Zesio hidroxidoa", elements: ["Cs", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "FrOH", name: "Frantzio hidroxidoa", elements: ["Fr", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "AgOH", name: "Zilar hidroxidoa", elements: ["Ag", "O", "H"], type: "Hidroxidoaa" },
+                
+                { formula: "Be(OH)₂", name: "Berilio hidroxidoa", elements: ["Be", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Mg(OH)₂", name: "Magnesio hidroxidoa", elements: ["Mg", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Ca(OH)₂", name: "Kaltzio hidroxidoa", elements: ["Ca", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Sr(OH)₂", name: "Estrontzio hidroxidoa", elements: ["Sr", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Ba(OH)₂", name: "Bario hidroxidoa", elements: ["Ba", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Ra(OH)₂", name: "Radio hidroxidoa", elements: ["Ra", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Zn(OH)₂", name: "Zink hidroxidoa", elements: ["Zn", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Cd(OH)₂", name: "Kadmio hidroxidoa", elements: ["Cd", "O", "H"], type: "Hidroxidoaa" },
+                
+                // Hidroxidoak balentzia anitako metalekin
+                { formula: "CuOH", name: "Kobre(I) hidroxidoa", elements: ["Cu", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Cu(OH)₂", name: "Kobre(II) hidroxidoa", elements: ["Cu", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Fe(OH)₂", name: "Burdin(II) hidroxidoa", elements: ["Fe", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Fe(OH)₃", name: "Burdin(III) hidroxidoa", elements: ["Fe", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Co(OH)₂", name: "Kobalto(II) hidroxidoa", elements: ["Co", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Co(OH)₃", name: "Kobalto(III) hidroxidoa", elements: ["Co", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Ni(OH)₂", name: "Nikel(II) hidroxidoa", elements: ["Ni", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Ni(OH)₃", name: "Nikel(III) hidroxidoa", elements: ["Ni", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Cr(OH)₂", name: "Kromo(II) hidroxidoa", elements: ["Cr", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Cr(OH)₃", name: "Kromo(III) hidroxidoa", elements: ["Cr", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Mn(OH)₂", name: "Manganeso(II) hidroxidoa", elements: ["Mn", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Mn(OH)₃", name: "Manganeso(III) hidroxidoa", elements: ["Mn", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Al(OH)₃", name: "Aluminio hidroxidoa", elements: ["Al", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Sn(OH)₂", name: "Eztainu(II) hidroxidoa", elements: ["Sn", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Sn(OH)₄", name: "Eztainu(IV) hidroxidoa", elements: ["Sn", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Pb(OH)₂", name: "Beruna(II) hidroxidoa", elements: ["Pb", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Pb(OH)₄", name: "Beruna(IV) hidroxidoa", elements: ["Pb", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Bi(OH)₃", name: "Bismuto(III) hidroxidoa", elements: ["Bi", "O", "H"], type: "Hidroxidoaa" },
+                { formula: "Bi(OH)₅", name: "Bismuto(V) hidroxidoa", elements: ["Bi", "O", "H"], type: "Hidroxidoaa" },
+            ],
+            
+            // OXOAZIDOA
+            azid: [
+                // Nitrogenoaren azidoak
+				{ formula: "HNO", name: "Azido hiponitrosoa", elements: ["N", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HNO₂", name: "Azido nitrosoa", elements: ["N", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HNO₃", name: "Azido nitrikoa", elements: ["N", "O", "H"], type: "Oxoazidoa" },
+                
+                // Sufrearen azidoak
+				{ formula: "H₂SO₂", name: "Azido hiposulforosoa", elements: ["S", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂SO₃", name: "Azido sulforosoa", elements: ["S", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂SO₄", name: "Azido sulfurikoa", elements: ["S", "O", "H"], type: "Oxoazidoa" },
+                
+                // Fosforoaren azidoak
+                { formula: "H₃PO₃", name: "Azido fosforosoa", elements: ["P", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₃PO₄", name: "Azido fosforikoa", elements: ["P", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HPO₂", name: "Azido metafosforosoa", elements: ["P", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HPO₃", name: "Azido metafosforikoa", elements: ["P", "O", "H"], type: "Oxoazidoa" },
+                
+                // Karbonoaren azidoak
+				{ formula: "H₂CO₂", name: "Azido karbonosoa", elements: ["C", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂CO₃", name: "Azido karbonikoa", elements: ["C", "O", "H"], type: "Oxoazidoa" },
+                
+                // Kloroaren azidoak
+                { formula: "HClO", name: "Azido hipoklorosoa", elements: ["Cl", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HClO₂", name: "Azido klorosoa", elements: ["Cl", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HClO₃", name: "Azido klorikoa", elements: ["Cl", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HClO₄", name: "Azido perklorikoa", elements: ["Cl", "O", "H"], type: "Oxoazidoa" },
+                
+                // Bromoaren azidoak
+                { formula: "HBrO", name: "Azido hipobromosoa", elements: ["Br", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HBrO₂", name: "Azido bromosoa", elements: ["Br", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HBrO₃", name: "Azido bromikoa", elements: ["Br", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HBrO₄", name: "Azido perbromikoa", elements: ["Br", "O", "H"], type: "Oxoazidoa" },
+                
+                // Iodoaren azidoak
+                { formula: "HIO", name: "Azido hipoiodosoa", elements: ["I", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HIO₂", name: "Azido iodosoa", elements: ["I", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HIO₃", name: "Azido iodikoa", elements: ["I", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HIO₄", name: "Azido periodikoa", elements: ["I", "O", "H"], type: "Oxoazidoa" },
+                
+                // Artseniko eta antimonioaren azidoak
+                { formula: "H₃AsO₃", name: "Azido artseniosoa", elements: ["As", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₃AsO₄", name: "Azido artsenikoa", elements: ["As", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₃SbO₃", name: "Azido antimoniosoa", elements: ["Sb", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₃SbO₄", name: "Azido antimonikoa", elements: ["Sb", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HAsO₂", name: "Azido metaartseniosoa", elements: ["As", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HAsO₃", name: "Azido metaartsenikoa", elements: ["As", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HSbO₂", name: "Azido metaantimoniosoa", elements: ["Sb", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HSbO₃", name: "Azido metaantimonikoa", elements: ["Sb", "O", "H"], type: "Oxoazidoa" },
+                
+                // Selenio eta telurioaren azidoak
+				{ formula: "H₂SeO₂", name: "Azido hiposeleniosoa", elements: ["Se", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂SeO₃", name: "Azido seleniosoa", elements: ["Se", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂SeO₄", name: "Azido selenikoa", elements: ["Se", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "H₂TeO₂", name: "Azido hipotelurosoa", elements: ["Te", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂TeO₃", name: "Azido telurosoa", elements: ["Te", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂TeO₄", name: "Azido telurikoa", elements: ["Te", "O", "H"], type: "Oxoazidoa" },
+                
+                // Boroaren azidoak
+                { formula: "H₃BO₃", name: "Azido borikoa", elements: ["B", "O", "H"], type: "Oxoazidoa" },
+                { formula: "HBO₂", name: "Azido metaborikoa", elements: ["B", "O", "H"], type: "Oxoazidoa" },
+				
+				// Kromoa
+				{ formula: "H₂CrO₄", name: "Azido kromikoa", elements: ["Cr", "O", "H"], type: "Oxoazidoa" },
+				
+				// Manganesoa
+				{ formula: "H₂MnO₃", name: "Azido manganosoa", elements: ["Mn", "O", "H"], type: "Oxoazidoa" },
+                { formula: "H₂MnO₄", name: "Azido manganikoa", elements: ["Mn", "O", "H"], type: "Oxoazidoa" },
+				{ formula: "HMnO₄", name: "Azido permanganikoa", elements: ["Mn", "O", "H"], type: "Oxoazidoa" },
+				
+				// DIAZIDOAK
+				{ formula: "H₂S₂O₅", name: "Azido disulforosoa", elements: ["S", "O", "H"], type: "Diazidoa" },
+                { formula: "H₂S₂O₇", name: "Azido disulfurikoa", elements: ["S", "O", "H"], type: "Diazidoa" },
+				{ formula: "H₂Se₂O₅", name: "Azido diseleniosoa", elements: ["Se", "O", "H"], type: "Diazidoa" },
+                { formula: "H₂Se₂O₇", name: "Azido diselenikoa", elements: ["Se", "O", "H"], type: "Diazidoa" },
+				{ formula: "H₂Te₂O₅", name: "Azido ditelurosoa", elements: ["Te", "O", "H"], type: "Diazidoa" },
+                { formula: "H₂Te₂O₇", name: "Azido ditelurikoa", elements: ["Te", "O", "H"], type: "Diazidoa" },
+				
+				{ formula: "H₂Cr₂O₇", name: "Azido dikromikoa", elements: ["Cr", "O", "H"], type: "Diazidoa" },
+            ],
+			
+			
+            
+            // HIDRURO METALIKOA
+            metalHydrides: [
+                { formula: "LiH", name: "Litio hidruroa", elements: ["Li", "H"], type: "Hidruro metalikoa" },
+                { formula: "NaH", name: "Sodio hidruroa", elements: ["Na", "H"], type: "Hidruro metalikoa" },
+                { formula: "KH", name: "Potasio hidruroa", elements: ["K", "H"], type: "Hidruro metalikoa" },
+                { formula: "RbH", name: "Rubidio hidruroa", elements: ["Rb", "H"], type: "Hidruro metalikoa" },
+                { formula: "CsH", name: "Zesio hidruroa", elements: ["Cs", "H"], type: "Hidruro metalikoa" },
+                { formula: "FrH", name: "Frantzio hidruroa", elements: ["Fr", "H"], type: "Hidruro metalikoa" },
+                { formula: "BeH₂", name: "Berilio hidruroa", elements: ["Be", "H"], type: "Hidruro metalikoa" },
+                { formula: "MgH₂", name: "Magnesio hidruroa", elements: ["Mg", "H"], type: "Hidruro metalikoa" },
+                { formula: "CaH₂", name: "Kaltzio hidruroa", elements: ["Ca", "H"], type: "Hidruro metalikoa" },
+                { formula: "SrH₂", name: "Estrontzio hidruroa", elements: ["Sr", "H"], type: "Hidruro metalikoa" },
+                { formula: "BaH₂", name: "Bario hidruroa", elements: ["Ba", "H"], type: "Hidruro metalikoa" },
+                { formula: "RaH₂", name: "Radio hidruroa", elements: ["Ra", "H"], type: "Hidruro metalikoa" },
+                { formula: "ZnH₂", name: "Zink hidruroa", elements: ["Zn", "H"], type: "Hidruro metalikoa" },
+                { formula: "CdH₂", name: "Kadmio hidruroa", elements: ["Cd", "H"], type: "Hidruro metalikoa" },
+                { formula: "CuH", name: "Kobre(I) hidruroa", elements: ["Cu", "H"], type: "Hidruro metalikoa" },
+                { formula: "FeH₂", name: "Burdin(II) hidruroa", elements: ["Fe", "H"], type: "Hidruro metalikoa" },
+                { formula: "AlH₃", name: "Aluminio hidruroa", elements: ["Al", "H"], type: "Hidruro metalikoa" },
+            ],
+            
+            // HIDRURO EZ METALIKOA
+            nonmetalHydrides: [
+                { formula: "HF", name: "Azido fluorhidrikoa", elements: ["H", "F"], type: "Hidruro ez metalikoa" },
+                { formula: "HCl", name: "Azido klorhidrikoa", elements: ["H", "Cl"], type: "Hidruro ez metalikoa" },
+                { formula: "HBr", name: "Azido bromhidrikoa", elements: ["H", "Br"], type: "Hidruro ez metalikoa" },
+                { formula: "HI", name: "Azido iodhidrikoa", elements: ["H", "I"], type: "Hidruro ez metalikoa" },
+                { formula: "H₂S", name: "Azido sulfhidrikoa", elements: ["H", "S"], type: "Hidruro ez metalikoa" },
+                { formula: "H₂Se", name: "Azido selenhidrikoa", elements: ["H", "Se"], type: "Hidruro ez metalikoa" },
+                { formula: "H₂Te", name: "Azido telurhidrikoa", elements: ["H", "Te"], type: "Hidruro ez metalikoa" },
+                { formula: "NH₃", name: "Amoniakoa", elements: ["N", "H"], type: "Hidruro ez metalikoa" },
+                { formula: "PH₃", name: "Fosfina", elements: ["P", "H"], type: "Hidruro ez metalikoa" },
+                { formula: "AsH₃", name: "Artsina", elements: ["As", "H"], type: "Hidruro ez metalikoa" },
+                { formula: "SbH₃", name: "Estibina", elements: ["Sb", "H"], type: "Hidruro ez metalikoa" },
+                { formula: "CH₄", name: "Metanoa", elements: ["C", "H"], type: "Hidruro ez metalikoa" },
+                { formula: "SiH₄", name: "Silanoa", elements: ["Si", "H"], type: "Hidruro ez metalikoa" },
+            ],
+            
+            // PEROXIDOA
+            peroxides: [
+                { formula: "Li₂O₂", name: "Litio peroxidoa", elements: ["Li", "O"], type: "Peroxidoa" },
+                { formula: "Na₂O₂", name: "Sodio peroxidoa", elements: ["Na", "O"], type: "Peroxidoa" },
+                { formula: "K₂O₂", name: "Potasio peroxidoa", elements: ["K", "O"], type: "Peroxidoa" },
+                { formula: "Rb₂O₂", name: "Rubidio peroxidoa", elements: ["Rb", "O"], type: "Peroxidoa" },
+                { formula: "Cs₂O₂", name: "Zesio peroxidoa", elements: ["Cs", "O"], type: "Peroxidoa" },
+                { formula: "Fr₂O₂", name: "Frantzio peroxidoa", elements: ["Fr", "O"], type: "Peroxidoa" },
+                { formula: "BeO₂", name: "Berilio peroxidoa", elements: ["Be", "O"], type: "Peroxidoa" },
+                { formula: "MgO₂", name: "Magnesio peroxidoa", elements: ["Mg", "O"], type: "Peroxidoa" },
+                { formula: "CaO₂", name: "Kaltzio peroxidoa", elements: ["Ca", "O"], type: "Peroxidoa" },
+                { formula: "SrO₂", name: "Estrontzio peroxidoa", elements: ["Sr", "O"], type: "Peroxidoa" },
+                { formula: "BaO₂", name: "Bario peroxidoa", elements: ["Ba", "O"], type: "Peroxidoa" },
+                { formula: "RaO₂", name: "Radio peroxidoa", elements: ["Ra", "O"], type: "Peroxidoa" },
+                { formula: "ZnO₂", name: "Zink peroxidoa", elements: ["Zn", "O"], type: "Peroxidoa" },
+                { formula: "CdO₂", name: "Kadmio peroxidoa", elements: ["Cd", "O"], type: "Peroxidoa" },
+            ]
+        };
+
+let selected={};
+const max=3;
+const search=document.getElementById('search');
+const counter=document.getElementById('counter');
+const res=document.getElementById('results');
+const reopen=document.getElementById('reopen');
+const wrapper=document.getElementById('results-wrapper');
+
+// Mapa de tipos para mostrar en euskera
+const typeNames = {
+    oxid: "Oxidoa",
+    gatz: "Gatz bitarra",
+    hidrox: "Hidroxidoaa",
+    azid: "Oxoazidoa",
+    metalHydrides: "Hidruro metalikoa",
+    nonmetalHydrides: "Hidruro ez metalikoa",
+    peroxides: "Peroxidoa"
+};
+
+search.addEventListener('focus',openSel);
+search.addEventListener('input',e=>fillOpts(e.target.value));
+
+function openSel(){
+  reopen.style.display='none';
+  document.getElementById('selector').style.display='flex';
+  fillOpts('');
+}
+function closeSel(){
+  document.getElementById('selector').style.display='none';
+  search.value='';
+  reopen.style.display='grid';
+}
+function reopenKeyboard(){
+  reopen.style.display='none';
+  search.focus();
+}
+function fillOpts(q){
+  const ul=document.getElementById('opts');ul.innerHTML='';
+  const norm=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  ['H','O'].forEach(s=>{
+    if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
+      ul.appendChild(createLi(s));
+    }
+  });
+  Object.keys(names).filter(s=>!['H','O'].includes(s)).forEach(s=>{
+    if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
+      ul.appendChild(createLi(s));
+    }
+  });
+}
+function createLi(s){
+  const li=document.createElement('li');
+  li.className= ['Li','Na','K','Rb','Cs','Fr','Ag','Be','Mg','Ca','Sr','Ba','Ra','Zn','Cd','Cu','Hg','Au','Fe','Co','Ni','Cr','Mn','Al','Sn','Pb','Bi'].includes(s)?'metal':'nonmetal';
+  const chk=document.createElement('input');chk.type='checkbox';
+  chk.checked=!!selected[s];
+  chk.onchange=()=>toggleList(s);
+  li.appendChild(chk);
+  li.appendChild(document.createTextNode(`${names[s]} (${s})`));
+  return li;
+}
+function toggleList(sym){
+  const n=(selected[sym]||0)+1;
+  if(n>max){delete selected[sym]}
+  else{if(!selected[sym]&&Object.keys(selected).length>=max){return}
+       selected[sym]=n}
+  fillOpts(search.value);
+  updateCounter();
+}
+function updateCounter(){
+  counter.textContent=Object.keys(selected).length;
+  calc();
+}
+function calc(){
+  const pick = Object.keys(selected);
+  let html = '<h2>Konposatuak</h2>';
+  let found = 0;
+  
+  Object.entries(db).forEach(([key, arr]) => {
+    const typ = typeNames[key] || key;
+    arr.forEach(c => {
+      // CORRECCIÓN: Verificar que el compuesto use EXACTAMENTE los elementos seleccionados
+      // 1. Todos los elementos del compuesto están en la selección
+      // 2. Todos los elementos de la selección están en el compuesto
+      // 3. Misma cantidad de elementos (para evitar duplicados)
+      const compElements = c.elements;
+      
+      // Verificar que el compuesto use exactamente los elementos seleccionados
+      const usesAllSelected = pick.every(element => compElements.includes(element));
+      const usesOnlySelected = compElements.every(element => pick.includes(element));
+      
+      if (usesAllSelected && usesOnlySelected) {
+        found++;
+        html += `<div class="compound-card"><div class="compound-name">${c.formula} – ${c.name}</div><div class="compound-type">${typ}</div></div>`;
+      }
+    });
+  });
+  
+  if (!found) html += '<div class="no-results">Ez da aurkitu.</div>';
+  res.innerHTML = html;
+  wrapper.scrollTop = 0;
+}
+calc();
+</script>
+</body>
+</html>
+
+

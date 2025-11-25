@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Atomikoen Irudikapena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a3a7c, #3a4a8c);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .menu-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 10;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            max-height: 80vh;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #81c784;
+        }
+
+        .sidebar.active {
+            transform: translateY(0);
+        }
+
+        .sidebar h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #81c784;
+            font-weight: 600;
+            text-shadow: 0 0 12px rgba(129, 199, 132, 0.6);
+        }
+
+        .orbital-category {
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .orbital-category h2 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #81c784;
+        }
+
+        .orbital-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .orbital-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .orbital-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .orbital-option.active {
+            background: #81c784;
+            color: #1a2a6c;
+            box-shadow: 0 0 10px rgba(129, 199, 132, 0.8);
+            transform: translateY(-2px);
+            font-weight: 600;
+        }
+
+        .orbital-option.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .orbital-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .viewer {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000011;
+        }
+
+        #orbital-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #81c784;
+            border: 1px solid rgba(129, 199, 132, 0.3);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .menu-toggle {
+                display: none;
+            }
+            
+            .sidebar {
+                position: relative;
+                width: 250px;
+                transform: translateY(0);
+                max-height: 100vh;
+            }
+            
+            .viewer {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        
+        <div class="sidebar" id="sidebar">
+            <h1>Orbital Atomikoen Irudikapena</h1>
+            
+            <div class="orbital-category">
+                <h2>s orbitala</h2>
+                <div class="orbital-options">
+                    <button class="orbital-option" data-orbital="s">s</button>
+                </div>
+            </div>
+            
+            <div class="orbital-category">
+                <h2>p orbitalak</h2>
+                <div class="orbital-options">
+                    <button class="orbital-option" data-orbital="px">px</button>
+                    <button class="orbital-option" data-orbital="py">py</button>
+                    <button class="orbital-option" data-orbital="pz">pz</button>
+                </div>
+            </div>
+            
+            <div class="orbital-category">
+                <h2>Orbital Hibridoak</h2>
+                <div class="orbital-options">
+                    <button class="orbital-option" data-orbital="sp">sp</button>
+                    <button class="orbital-option" data-orbital="sp2">sp²</button>
+                    <button class="orbital-option" data-orbital="sp3">sp³</button>
+                </div>
+            </div>
+            
+            <div class="orbital-category">
+                <h2>d orbitalak</h2>
+                <div class="orbital-options">
+                    <button class="orbital-option" data-orbital="dxy">dxy</button>
+                    <button class="orbital-option" data-orbital="dx2y2">dx²-y²</button>
+                    <button class="orbital-option" data-orbital="dyz">dyz</button>
+                    <button class="orbital-option" data-orbital="dzx">dzx</button>
+                    <button class="orbital-option" data-orbital="dz2">dz²</button>
+                </div>
+            </div>
+            
+            <div class="orbital-category">
+                <h2>f orbitalak</h2>
+                <div class="orbital-options">
+                    <button class="orbital-option" data-orbital="f1">f1</button>
+                    <button class="orbital-option" data-orbital="f2">f2</button>
+                    <button class="orbital-option" data-orbital="f3">f3</button>
+                    <button class="orbital-option" data-orbital="f4">f4</button>
+                    <button class="orbital-option" data-orbital="f5">f5</button>
+                    <button class="orbital-option" data-orbital="f6">f6</button>
+                    <button class="orbital-option" data-orbital="f7">f7</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="viewer">
+            <canvas id="orbital-canvas"></canvas>
+            <div class="status" id="status-message"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+    <script>
+        // Variables globales
+        let scene, camera, renderer, controls;
+        let activeOrbitals = new Set();
+        let orbitalModels = {};
+        let loader = new THREE.GLTFLoader();
+        
+        const baseURL = 'https://raw.githubusercontent.com/Mikelikoptero/Taularako-argazkiak/main/Orbitalak%20aldatuta/';
+        
+        const orbitalFiles = {
+            's': 's.glb',
+            'px': 'px.glb',
+            'py': 'py.glb',
+            'pz': 'pz.glb',
+            'sp': 'sp_hybridization.glb',
+            'sp2': 'sp2_hybridization.glb',
+            'sp3': 'sp3_hybridization.glb',
+            'dxy': 'dxy.glb',
+            'dx2y2': 'dx2y2.glb',
+            'dyz': 'dyz.glb',
+            'dzx': 'dzx.glb',
+            'dz2': 'dz2.glb',
+            'f1': 'f1.glb',
+            'f2': 'f2.glb',
+            'f3': 'f3.glb',
+            'f4': 'f4.glb',
+            'f5': 'f5.glb',
+            'f6': 'f6.glb',
+            'f7': 'f7.glb'
+        };
+
+        const orbitalScales = {
+            's': [0.01, 0.01, 0.01],
+            'px': [0.01, 0.005, 0.005],
+            'py': [0.005, 0.005, 0.01],
+            'pz': [0.005, 0.01, 0.005],
+            'sp': [0.6, 0.6, 0.35],
+            'sp2': [0.35, 0.35, 0.35],
+            'sp3': [0.35, 0.35, 0.35],
+            'dxy': [0.01, 0.01, 0.01],
+            'dx2y2': [0.01, 0.01, 0.01],
+            'dyz': [0.01, 0.01, 0.01],
+            'dzx': [0.01, 0.01, 0.01],
+            'dz2': [0.01, 0.01, 0.01],
+            'f1': [0.01, 0.01, 0.01],
+            'f2': [0.01, 0.01, 0.01],
+            'f3': [0.01, 0.01, 0.01],
+            'f4': [0.01, 0.01, 0.01],
+            'f5': [0.01, 0.01, 0.01],
+            'f6': [0.01, 0.01, 0.01],
+            'f7': [0.01, 0.01, 0.01]
+        };
+
+        // Mapeo de categorías
+        const orbitalCategories = {
+            's': ['s'],
+            'p': ['px', 'py', 'pz'],
+            'hybrid': ['sp', 'sp2', 'sp3'],
+            'd': ['dxy', 'dx2y2', 'dyz', 'dzx', 'dz2'],
+            'f': ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7']
+        };
+
+        // Configuración de la escena
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x001122);
+            
+            // Cámara
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 1000);
+            camera.position.set(0, 0, 3);
+            
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('orbital-canvas'), 
+                antialias: true,
+                alpha: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.sortObjects = false;
+            
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 1;
+            controls.maxDistance = 10;
+            controls.autoRotate = false; // Sin rotación automática
+            
+            // Configuración de iluminación
+            setupLighting();
+            
+            // Ejes de referencia
+            const axesHelper = new THREE.AxesHelper(1);
+            scene.add(axesHelper);
+            
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            setupEventListeners();
+            
+            // Iniciar animación
+            animate();
+        }
+        
+        // Configuración de iluminación
+        function setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 2.0);
+            directionalLight1.position.set(10, 10, 10);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight2.position.set(-10, 5, -10);
+            scene.add(directionalLight2);
+        }
+        
+        // Configuración de event listeners
+        function setupEventListeners() {
+            document.querySelectorAll('.orbital-option').forEach(button => {
+                button.addEventListener('click', () => {
+                    const orbital = button.getAttribute('data-orbital');
+                    toggleOrbital(orbital, button);
+                });
+            });
+            
+            // Toggle del menú con el mismo botón ☰
+            document.getElementById('menu-toggle').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('active');
+            });
+        }
+
+        // Función para obtener la categoría de un orbital
+        function getOrbitalCategory(orbital) {
+            for (const [category, orbitals] of Object.entries(orbitalCategories)) {
+                if (orbitals.includes(orbital)) {
+                    return category;
+                }
+            }
+            return null;
+        }
+
+        // Función para verificar si un orbital puede combinarse con los activos
+        function canCombineWithActive(orbital) {
+            // Si no hay orbitales activos, siempre se puede añadir
+            if (activeOrbitals.size === 0) return true;
+            
+            // Obtener la categoría del nuevo orbital
+            const newOrbitalCategory = getOrbitalCategory(orbital);
+            
+            // Verificar si ya hay orbitales activos de diferentes categorías
+            for (const activeOrbital of activeOrbitals) {
+                const activeOrbitalCategory = getOrbitalCategory(activeOrbital);
+                
+                // Si las categorías son diferentes, verificar si es una combinación permitida
+                if (newOrbitalCategory !== activeOrbitalCategory) {
+                    // Verificar combinaciones permitidas específicas
+                    const isAllowedCombination = 
+                        // sp con py y pz
+                        ((orbital === 'sp' && (activeOrbital === 'py' || activeOrbital === 'pz')) ||
+                        ((activeOrbital === 'sp' && (orbital === 'py' || orbital === 'pz'))) ||
+                        // sp2 con pz
+                        ((orbital === 'sp2' && activeOrbital === 'pz') ||
+                        (activeOrbital === 'sp2' && orbital === 'pz')));
+                    
+                    if (!isAllowedCombination) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        // Función para actualizar el estado de los botones según las reglas de combinación
+        function updateButtonStates() {
+            document.querySelectorAll('.orbital-option').forEach(button => {
+                const orbital = button.getAttribute('data-orbital');
+                
+                if (activeOrbitals.size > 0 && !activeOrbitals.has(orbital)) {
+                    if (canCombineWithActive(orbital)) {
+                        button.classList.remove('disabled');
+                    } else {
+                        button.classList.add('disabled');
+                    }
+                } else {
+                    button.classList.remove('disabled');
+                }
+            });
+        }
+
+        // Función para limpiar orbitales incompatibles
+        function clearIncompatibleOrbitals(newOrbital) {
+            const orbitalsToRemove = [];
+            
+            for (const activeOrbital of activeOrbitals) {
+                if (!canCombineWithActive(newOrbital)) {
+                    orbitalsToRemove.push(activeOrbital);
+                }
+            }
+            
+            orbitalsToRemove.forEach(orbital => {
+                activeOrbitals.delete(orbital);
+                if (orbitalModels[orbital]) {
+                    scene.remove(orbitalModels[orbital]);
+                }
+                const button = document.querySelector(`[data-orbital="${orbital}"]`);
+                if (button) {
+                    button.classList.remove('active');
+                    button.classList.remove('loading');
+                }
+            });
+        }
+        
+        // Función para alternar orbitales
+        async function toggleOrbital(orbital, button) {
+            if (button.classList.contains('disabled')) {
+                showStatus('Ezin da orbital hau besteekin konbinatu', true);
+                return;
+            }
+            
+            if (activeOrbitals.has(orbital)) {
+                // Si ya está activo, quitarlo
+                activeOrbitals.delete(orbital);
+                button.classList.remove('active');
+                
+                if (orbitalModels[orbital]) {
+                    scene.remove(orbitalModels[orbital]);
+                    showStatus(`${orbital} orbitala kenduta`);
+                }
+            } else {
+                // Limpiar orbitales incompatibles antes de añadir el nuevo
+                clearIncompatibleOrbitals(orbital);
+                
+                // Añadir el nuevo orbital
+                activeOrbitals.add(orbital);
+                button.classList.add('active');
+                button.classList.add('loading');
+                
+                try {
+                    await loadOrbitalModel(orbital);
+                    button.classList.remove('loading');
+                    showStatus(`${orbital} orbitala ezarrita`);
+                } catch (error) {
+                    console.error(`${orbital} orbitala ezartzen errorea:`, error);
+                    button.classList.remove('active');
+                    button.classList.remove('loading');
+                    activeOrbitals.delete(orbital);
+                    showStatus(`${orbital} ezartzen errorea`, true);
+                }
+            }
+            
+            // Actualizar estado de todos los botones
+            updateButtonStates();
+        }
+        
+        // Función para cargar modelos orbitales
+        function loadOrbitalModel(orbital) {
+            return new Promise((resolve, reject) => {
+                const filename = orbitalFiles[orbital];
+                if (!filename) {
+                    reject(new Error(`${orbital} orbitalaren fitxategia ez da aurkitu`));
+                    return;
+                }
+                
+                const url = baseURL + filename;
+                
+                console.log(`Cargando: ${url}`);
+                
+                loader.load(
+                    url,
+                    (gltf) => {
+                        const model = gltf.scene;
+                        model.name = orbital;
+                        
+                        // OBTENER ESCALA DESDE EL OBJETO orbitalScales
+                        const scale = orbitalScales[orbital] || [0.01, 0.01, 0.01];
+                        model.scale.set(scale[0], scale[1], scale[2]);
+                        
+                        // CONFIGURACIONES ESPECIALES PARA HIBRIDACIONES
+                        if (orbital === 'sp' || orbital === 'sp2' || orbital === 'sp3') {
+                            // ROTACIÓN DE 90 GRADOS EN EL EJE Y
+                            model.rotation.y = Math.PI / 2; // 90 grados en radianes
+                            
+                            // FORZAR MATERIALES OPACOS PARA HIBRIDACIONES
+                            model.traverse((child) => {
+                                if (child.isMesh) {
+                                    if (child.material) {
+                                        // Hacer el material completamente opaco
+                                        child.material.transparent = false;
+                                        child.material.opacity = 1.0;
+                                        child.material.depthWrite = true;
+                                        child.material.depthTest = true;
+                                        child.material.alphaTest = 0;
+                                        child.material.blending = THREE.NormalBlending;
+                                        
+                                        // Deshabilitar cualquier transparencia
+                                        if (child.material.map) {
+                                            child.material.map.format = THREE.RGBFormat;
+                                        }
+                                        
+                                        child.material.needsUpdate = true;
+                                    }
+                                }
+                            });
+                        } else {
+                            // Materiales normales para orbitales no híbridos
+                            model.traverse((child) => {
+                                if (child.isMesh) {
+                                    if (child.material) {
+                                        child.material.transparent = false;
+                                        child.material.opacity = 1.0;
+                                        child.material.needsUpdate = true;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Centrar el modelo
+                        model.position.set(0, 0, 0);
+                        
+                        orbitalModels[orbital] = model;
+                        scene.add(model);
+                        
+                        console.log(`Modelo ${orbital} cargado con escala: [${scale[0]}, ${scale[1]}, ${scale[2]}]`);
+                        resolve();
+                    },
+                    (progress) => {
+                        const percent = progress.lengthComputable 
+                            ? (progress.loaded / progress.total * 100).toFixed(0)
+                            : '...';
+                        showStatus(`${orbital} ezartzen...: ${percent}%`);
+                    },
+                    (error) => {
+                        console.error('Error de carga:', error);
+                        reject(error);
+                    }
+                );
+            });
+        }
+        
+        // Función para mostrar mensajes de estado
+        function showStatus(message, isError = false) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.style.color = isError ? '#ff5252' : '#81c784';
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Función para manejar el redimensionado de ventana
+        function onWindowResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+        
+        // Función de animación
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Sin rotación automática
+            controls.autoRotate = false;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Iniciar aplicación
+        init();
+    </script>
+</body>
+</html>
