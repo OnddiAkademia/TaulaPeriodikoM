@@ -228,69 +228,6 @@
             margin-top: 0;
         }
 
-        /* PDF Viewer estiloa */
-        .pdf-viewer {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            z-index: 1000;
-            overflow: auto;
-        }
-
-        .pdf-toolbar {
-            position: sticky;
-            top: 0;
-            background: var(--primary-color);
-            padding: 10px;
-            text-align: right;
-            z-index: 1001;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .pdf-toolbar button {
-            background: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 5px;
-        }
-
-        .pdf-toolbar .page-info {
-            color: white;
-            font-size: 14px;
-        }
-
-        .pdf-container {
-            width: 100%;
-            min-height: calc(100vh - 50px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .pdf-container canvas {
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 100%;
-            height: auto;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 18px;
-            color: var(--primary-color);
-        }
-
         /* Responsive */
         @media (max-width: 480px) {
             .function-buttons {
@@ -302,8 +239,6 @@
             }
         }
     </style>
-    <!-- PDF.js liburutegia -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
     <!-- Pantalla principal -->
@@ -374,21 +309,6 @@
                     <div>Kalkulagailuak</div>
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- PDF Viewer panela -->
-    <div class="pdf-viewer" id="pdfViewer">
-        <div class="pdf-toolbar">
-            <div class="page-info" id="pageInfo">Orrialdea: 0 / 0</div>
-            <div>
-                <button id="prevPageBtn">◀ Aurrekoa</button>
-                <button id="nextPageBtn">Hurrengoa ▶</button>
-                <button id="closePdfBtn">Itxi ✕</button>
-            </div>
-        </div>
-        <div class="pdf-container" id="pdfContainer">
-            <div class="loading">PDFa kargatzen...</div>
         </div>
     </div>
 
@@ -539,21 +459,8 @@ const actinides = [
         const showCompoundsBtn = document.getElementById('showCompoundsBtn');
         const showCalculatorBtn = document.getElementById('showCalculatorBtn');
 
-        // PDF Viewer elementuak
-        const pdfViewer = document.getElementById('pdfViewer');
-        const pdfContainer = document.getElementById('pdfContainer');
-        const pageInfo = document.getElementById('pageInfo');
-        const prevPageBtn = document.getElementById('prevPageBtn');
-        const nextPageBtn = document.getElementById('nextPageBtn');
-        const closePdfBtn = document.getElementById('closePdfBtn');
-
         // URL del PDF en GitHub
         const pdfUrl = 'https://raw.githubusercontent.com/OnddiAkademia/TaulaPeriodikoM/main/taulaperiodikoa.pdf';
-
-        // PDF.js aldagaiak
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageCount = 0;
 
         // Funcionalidad de búsqueda
         searchInput.addEventListener('input', function() {
@@ -646,78 +553,10 @@ const actinides = [
             }
         }
 
-        // PDFa kargatzeko funtzioa
-        function loadPdf() {
-            pdfContainer.innerHTML = '<div class="loading">PDFa kargatzen...</div>';
-            
-            pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
-                pdfDoc = pdf;
-                pageCount = pdf.numPages;
-                pageInfo.textContent = `Orrialdea: 1 / ${pageCount}`;
-                
-                // Kargatu lehen orrialdea
-                renderPage(pageNum);
-            }).catch(error => {
-                pdfContainer.innerHTML = `<div class="loading">Errorea PDFa kargatzean: ${error.message}</div>`;
-            });
-        }
-
-        // Orrialdea errendatzeko funtzioa
-        function renderPage(num) {
-            pdfDoc.getPage(num).then(page => {
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                
-                // Kalkulatu tamaina egokia pantailarako
-                const viewport = page.getViewport({ scale: 1.5 });
-                
-                // Egokitu tamaina pantailaren zabalerara
-                const containerWidth = pdfContainer.clientWidth - 40;
-                const scale = containerWidth / viewport.width;
-                
-                const scaledViewport = page.getViewport({ scale: scale });
-                
-                canvas.height = scaledViewport.height;
-                canvas.width = scaledViewport.width;
-                
-                // Garbitu aurreko orrialdea
-                pdfContainer.innerHTML = '';
-                pdfContainer.appendChild(canvas);
-                
-                page.render({
-                    canvasContext: context,
-                    viewport: scaledViewport
-                });
-                
-                pageInfo.textContent = `Orrialdea: ${num} / ${pageCount}`;
-            });
-        }
-
-        // Event listeners
+        // Event listeners - 1. METODOA: Nabigatzailearen PDF ikustaile natiboa
         showPdfBtn.addEventListener('click', () => {
-            pdfViewer.style.display = 'block';
-            mainScreen.style.display = 'none';
-            loadPdf();
-        });
-
-        closePdfBtn.addEventListener('click', () => {
-            pdfViewer.style.display = 'none';
-            mainScreen.style.display = 'flex';
-            pdfContainer.innerHTML = ''; // Garbitu memoria
-        });
-
-        prevPageBtn.addEventListener('click', () => {
-            if (pdfDoc && pageNum > 1) {
-                pageNum--;
-                renderPage(pageNum);
-            }
-        });
-
-        nextPageBtn.addEventListener('click', () => {
-            if (pdfDoc && pageNum < pageCount) {
-                pageNum++;
-                renderPage(pageNum);
-            }
+            // PDFa fitxa berrian ireki nabigatzailearen berezko ikustailearekin
+            window.open(pdfUrl, '_blank');
         });
 
         showOrbitalsBtn.addEventListener('click', () => {
