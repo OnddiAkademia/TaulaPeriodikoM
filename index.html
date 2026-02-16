@@ -459,7 +459,7 @@ const actinides = [
         const showCompoundsBtn = document.getElementById('showCompoundsBtn');
         const showCalculatorBtn = document.getElementById('showCalculatorBtn');
 
-        // URL del PDF en GitHub - para abrir en nueva pestaña
+        // URL del PDF en GitHub - para abrir en Google Docs Viewer
         const pdfUrl = 'https://raw.githubusercontent.com/OnddiAkademia/TaulaPeriodikoM/main/taulaperiodikoa.pdf';
 
         // Funcionalidad de búsqueda
@@ -569,10 +569,10 @@ const actinides = [
             }
         }
 
-        // Event listeners
+        // Event listeners - HIRUGARREN AUKERA: Google Docs Viewer
         showPdfBtn.addEventListener('click', () => {
-            // PDFa fitxa berrian ireki
-            window.open(pdfUrl, '_blank');
+            // PDFa Google Docs Viewer-ekin ireki fitxa berrian (deskargatu gabe)
+            window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}`, '_blank');
         });
 
         showOrbitalsBtn.addEventListener('click', () => {
@@ -596,5 +596,3 @@ const actinides = [
     </script>
 </body>
 </html>
-
-
