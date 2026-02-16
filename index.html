@@ -124,7 +124,7 @@
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
             flex-grow: 1;
-            overflow: hidden; /* Eliminamos el scroll */
+            overflow: hidden;
         }
 
         .element-header {
@@ -228,74 +228,6 @@
             margin-top: 0;
         }
 
-        /* Pantalla de visualización PDF */
-        .pdf-screen {
-            display: none;
-            height: 100vh;
-            overflow: auto;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: var(--bg-light);
-            z-index: 100;
-        }
-
-        .pdf-container {
-            padding: 15px;
-            min-height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .pdf-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            position: sticky;
-            top: 0;
-            background: var(--bg-light);
-            padding: 10px 0;
-            z-index: 10;
-        }
-
-        .back-btn {
-            background: rgba(42, 97, 73, 0.1);
-            border: none;
-            color: var(--text-dark);
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
-        .pdf-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .pdf-viewer {
-            flex: 1;
-            background: var(--bg-card);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            overflow: auto;
-            min-height: 600px;
-        }
-
-        .pdf-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            min-height: 80vh;
-        }
-
         /* Responsive */
         @media (max-width: 480px) {
             .function-buttons {
@@ -304,10 +236,6 @@
             
             .element-details {
                 grid-template-columns: 1fr;
-            }
-            
-            .pdf-iframe {
-                min-height: 70vh;
             }
         }
     </style>
@@ -380,21 +308,6 @@
                 <button class="func-btn" id="showCalculatorBtn">
                     <div>Kalkulagailuak</div>
                 </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pantalla de visualización PDF -->
-    <div class="pdf-screen" id="pdfScreen">
-        <div class="pdf-container">
-            <div class="pdf-header">
-                <button class="back-btn" id="backFromPdfBtn">←</button>
-                <div class="pdf-title">Taula Periodikoa (PDF)</div>
-                <div style="width: 40px;"></div>
-            </div>
-            
-            <div class="pdf-viewer">
-                <iframe class="pdf-iframe" id="pdfViewer" src=""></iframe>
             </div>
         </div>
     </div>
@@ -537,7 +450,6 @@ const actinides = [
 ];
         // Referencias a elementos DOM
         const mainScreen = document.getElementById('mainScreen');
-        const pdfScreen = document.getElementById('pdfScreen');
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         const elementInfo = document.getElementById('elementInfo');
@@ -546,13 +458,8 @@ const actinides = [
         const showValenceBtn = document.getElementById('showValenceBtn');
         const showCompoundsBtn = document.getElementById('showCompoundsBtn');
         const showCalculatorBtn = document.getElementById('showCalculatorBtn');
-        const backFromPdfBtn = document.getElementById('backFromPdfBtn');
-        const pdfViewer = document.getElementById('pdfViewer');
 
-        // Variables de estado
-        let currentDisplayMode = 'normal';
-
-        // URL del PDF en GitHub - CORREGIDA con nombre en minúsculas y sin espacios
+        // URL del PDF en GitHub - para abrir en nueva pestaña
         const pdfUrl = 'https://raw.githubusercontent.com/Mikelikoptero/Taularako-argazkiak/main/taulaperiodikoa.pdf';
 
         // Funcionalidad de búsqueda
@@ -594,7 +501,7 @@ const actinides = [
             }
         });
 
-        // Mostrar información del elemento - CORREGIDA LA VISUALIZACIÓN DE IONIZACIÓN
+        // Mostrar información del elemento
         function showElementInfo(el) {
             document.getElementById('elementName').textContent = el.name;
             document.getElementById('elementZ').textContent = `Z = ${el.z}`;
@@ -619,7 +526,6 @@ const actinides = [
                 radiusDisplay.textContent = 'Ezezaguna';
             }
             
-            // CORRECCIÓN: Mostrar correctamente la energía de ionización
             const ionizationDisplay = document.getElementById('detailIonization');
             if (el.ionization !== undefined && el.ionization !== null && el.ionization > 0) {
                 ionizationDisplay.textContent = el.ionization + ' kJ/mol';
@@ -663,52 +569,26 @@ const actinides = [
             }
         }
 
-        // Funciones para cambiar entre pantallas
-        function showScreen(screen) {
-            mainScreen.style.display = 'none';
-            pdfScreen.style.display = 'none';
-            
-            switch(screen) {
-                case 'main':
-                    mainScreen.style.display = 'flex';
-                    break;
-                case 'pdf':
-                    pdfScreen.style.display = 'block';
-                    pdfViewer.src = pdfUrl;
-                    break;
-            }
-        }
-
         // Event listeners
         showPdfBtn.addEventListener('click', () => {
-            showScreen('pdf');
+            // PDFa fitxa berrian ireki
+            window.open(pdfUrl, '_blank');
         });
 
         showOrbitalsBtn.addEventListener('click', () => {
-            // Redirigir a la web especificada
             window.location.href = './Orbitalak/';
         });
 
         showValenceBtn.addEventListener('click', () => {
-            // Redirigir a la web especificada
             window.location.href = './BalentzienTaula/';
         });
 
-        // NUEVOS EVENT LISTENERS PARA LOS BOTONES AÑADIDOS
         showCompoundsBtn.addEventListener('click', () => {
-            // Redirigir a la web especificada
             window.location.href = './KonposatuInorganiko/';
         });
 
         showCalculatorBtn.addEventListener('click', () => {
-            // Redirigir a la web especificada
             window.location.href = './Kalkulagailu/';
-        });
-
-        backFromPdfBtn.addEventListener('click', () => {
-            showScreen('main');
-            // Limpiar el iframe al volver para ahorrar recursos
-            pdfViewer.src = '';
         });
 
         // Inicialización
