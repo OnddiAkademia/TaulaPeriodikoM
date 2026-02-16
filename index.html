@@ -228,8 +228,8 @@
             margin-top: 0;
         }
 
-        /* Pantalla de tabla periódica - VERTICAL MEJORADA */
-        .table-screen {
+        /* Pantalla de visualización PDF */
+        .pdf-screen {
             display: none;
             height: 100vh;
             overflow: auto;
@@ -241,14 +241,14 @@
             z-index: 100;
         }
 
-        .table-container {
+        .pdf-container {
             padding: 15px;
             min-height: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        .table-header {
+        .pdf-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -274,268 +274,27 @@
             font-size: 18px;
         }
 
-        .table-title {
+        .pdf-title {
             font-size: 18px;
             font-weight: 600;
             color: var(--text-dark);
         }
 
-        /* MENÚ RETRÁCTIL PARA CONTROLES */
-        .table-controls-collapsible {
-            margin-bottom: 15px;
-            position: sticky;
-            top: 70px;
-            background: var(--bg-light);
-            z-index: 10;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .controls-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: rgba(42, 97, 73, 0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .controls-header:hover {
-            background: rgba(42, 97, 73, 0.08);
-        }
-
-        .controls-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .controls-icon {
-            color: var(--primary-color);
-            transition: transform 0.3s ease;
-        }
-
-        .table-controls-collapsible.active .controls-icon {
-            transform: rotate(180deg);
-        }
-
-        .table-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-        }
-
-        .table-controls-collapsible.active .table-controls {
-            max-height: 150px;
-            padding: 12px;
-        }
-
-        .control-toggle {
-            background: rgba(42, 97, 73, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 12px;
-            color: var(--text-dark);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .control-toggle.active {
-            background: rgba(42, 97, 73, 0.15);
-            border-color: var(--primary-color);
-        }    
-
-        .periodic-table-container {
+        .pdf-viewer {
             flex: 1;
-            overflow: auto;
             background: var(--bg-card);
             border-radius: 8px;
-            padding: 10px;
             border: 1px solid var(--border-color);
+            overflow: auto;
             min-height: 600px;
         }
 
-        .periodic-table-wrapper {
-            position: relative;
-            overflow: auto;
-            min-width: 850px;
+        .pdf-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            min-height: 80vh;
         }
-
-        .periodic {
-            display: grid;
-            grid-template-columns: 20px repeat(18, var(--cell-size));
-            gap: 3px;
-            margin-bottom: 15px;
-        }
-
-        /* ETIQUETAS DE PERÍODOS - CORREGIDAS */
-        .period-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--text-muted);
-            background: rgba(42, 97, 73, 0.05);
-            border-radius: 4px;
-            padding: 8px 4px;
-            height: var(--cell-size);
-            width: 20px;
-        }
-
-        /* ETIQUETAS DE GRUPOS - CORREGIDAS */
-        .group-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--text-muted);
-            background: rgba(42, 97, 73, 0.05);
-            border-radius: 4px;
-            padding: 2px 4px;
-            height: 20px;
-            width: var(--cell-size);
-        }
-
-        /* FILA DE GRUPOS */
-        .group-row {
-            display: contents;
-        }
-
-        .cell {
-            background: rgba(240, 240, 240, 0.8);
-            border-radius: 4px;
-            padding: 3px;
-            color: var(--text-dark);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            font-size: 9px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            aspect-ratio: 1;
-            min-height: 0;
-            width: var(--cell-size);
-            height: var(--cell-size);
-        }
-
-        .cell .num {
-            font-size: 7px;
-            opacity: 0.85;
-        }
-
-        .cell .sym {
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 1;
-            text-align: center;
-            margin: 1px 0;
-        }
-
-        .cell .ename {
-            font-size: 6px;
-            opacity: 0.95;
-            line-height: 1.05;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .cell:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(42, 97, 73, 0.2);
-            border-color: var(--primary-color);
-        }
-
-        .bottom-series-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 850px;
-        }
-
-        .bottom-series {
-            display: flex;
-            gap: 3px;
-            background: var(--bg-card);
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            justify-content: flex-start;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            align-items: center;
-        }
-
-        /* ESPACIOS VACÍOS CORREGIDOS - ahora 3 espacios para alinear con grupo 3 */
-        .space-cell {
-            width: var(--cell-size);
-            height: var(--cell-size);
-            flex-shrink: 0;
-            opacity: 0;
-        }
-
-        /* ESPACIO PARA ETIQUETAS DE PERÍODOS */
-        .period-space-cell {
-            width: 20px;
-            height: var(--cell-size);
-            flex-shrink: 0;
-            opacity: 0;
-        }
-
-        /* Colores de categorías */
-        .alkali { background: #FFB6C1; color: #333 }
-        .alkaline { background: #FFD8B1; color: #333 }
-        .lanthanide { background: #C9E4DE; color: #333 }
-        .actinide { background: #D8BFD8; color: #333 }
-        .transition { background: #B0E0E6; color: #333 }
-        .post-transition { background: #E6E6FA; color: #333 }
-        .metalloid { background: #98FB98; color: #333 }
-        .nonmetal { background: #F0E68C; color: #333 }
-        .halogen { background: #FFDEAD; color: #333 }
-        .noble { background: #DDA0DD; color: #333 }
-
-        /* Colores de bloques electrónicos */
-        .s-block { background: #FFB6C1 !important; color: #333; }
-        .p-block { background: #B19CD9 !important; color: #333; }
-        .d-block { background: #87CEEB !important; color: #333; }
-        .f-block { background: #FFDAC1 !important; color: #333; }
-
-        /* Colores para electronegatividad */
-        .electroneg-low { background: #e6f3ff !important; color: #333; }
-        .electroneg-medium { background: #99ccff !important; color: #333; }
-        .electroneg-high { background: #0066cc !important; color: #fff; }
-
-        /* Colores para radio atómico */
-        .radius-very-small { background: linear-gradient(135deg, #e8f5e8, #c8e6c9) !important; color: #333; }
-        .radius-small { background: linear-gradient(135deg, #a5d6a7, #81c784) !important; color: #333; }
-        .radius-medium-small { background: linear-gradient(135deg, #66bb6a, #4caf50) !important; color: #333; }
-        .radius-medium { background: linear-gradient(135deg, #43a047, #388e3c) !important; color: #fff; }
-        .radius-medium-large { background: linear-gradient(135deg, #2e7d32, #1b5e20) !important; color: #fff; }
-        .radius-large { background: linear-gradient(135deg, #1b5e20, #0d3c13) !important; color: #fff; }
-        .radius-very-large { background: linear-gradient(135deg, #0d3c13, #052509) !important; color: #fff; }
-
-        /* Colores para ionización */
-        .ionization-very-low { background: linear-gradient(135deg, #ffe6e6, #ffcdd2) !important; color: #333; }
-        .ionization-low { background: linear-gradient(135deg, #ef9a9a, #e57373) !important; color: #333; }
-        .ionization-medium-low { background: linear-gradient(135deg, #ef5350, #f44336) !important; color: #fff; }
-        .ionization-medium { background: linear-gradient(135deg, #e53935, #d32f2f) !important; color: #fff; }
-        .ionization-medium-high { background: linear-gradient(135deg, #c62828, #b71c1c) !important; color: #fff; }
-        .ionization-high { background: linear-gradient(135deg, #b71c1c, #8b0000) !important; color: #fff; }
-        .ionization-very-high { background: linear-gradient(135deg, #8b0000, #5a0000) !important; color: #fff; }
 
         /* Responsive */
         @media (max-width: 480px) {
@@ -547,16 +306,8 @@
                 grid-template-columns: 1fr;
             }
             
-            .periodic-table-container {
-                padding: 5px;
-            }
-            
-            .cell .sym {
-                font-size: 10px;
-            }
-            
-            .period-label, .group-label {
-                font-size: 12px;
+            .pdf-iframe {
+                min-height: 70vh;
             }
         }
     </style>
@@ -608,7 +359,7 @@
         </div>
         
         <div class="function-buttons">
-            <button class="func-btn" id="showTableBtn">
+            <button class="func-btn" id="showPdfBtn">
                 <div>Taula periodikoa</div>
             </button>
             
@@ -633,38 +384,17 @@
         </div>
     </div>
     
-    <!-- Pantalla de tabla periódica - VERTICAL MEJORADA -->
-    <div class="table-screen" id="tableScreen">
-        <div class="table-container">
-            <div class="table-header">
-                <button class="back-btn" id="backFromTableBtn">←</button>
-                <div class="table-title">Taula Periodikoa</div>
+    <!-- Pantalla de visualización PDF -->
+    <div class="pdf-screen" id="pdfScreen">
+        <div class="pdf-container">
+            <div class="pdf-header">
+                <button class="back-btn" id="backFromPdfBtn">←</button>
+                <div class="pdf-title">Taula Periodikoa (PDF)</div>
                 <div style="width: 40px;"></div>
             </div>
             
-            <!-- MENÚ RETRÁCTIL PARA CONTROLES -->
-            <div class="table-controls-collapsible" id="controlsCollapsible">
-                <div class="controls-header">
-                    <div class="controls-title">Kolore Eskemak</div>
-                    <div class="controls-icon">▼</div>
-                </div>
-                <div class="table-controls">
-                    <button class="control-toggle active" id="toggleNormal">Familia</button>
-                    <button class="control-toggle" id="toggleElec">Orbitalak</button>
-                    <button class="control-toggle" id="toggleRadius">Erradioa</button>
-                    <button class="control-toggle" id="toggleIonization">Ionizazioa</button>
-                    <button class="control-toggle" id="toggleElectroneg">Elektronegatibitatea</button>
-                </div>
-            </div>
-            
-            <div class="periodic-table-container">
-                <div class="periodic-table-wrapper">
-                    <div class="periodic" id="table"></div>
-                    <div class="bottom-series-container">
-                        <div class="bottom-series" id="lanthanides"></div>
-                        <div class="bottom-series" id="actinides"></div>
-                    </div>
-                </div>
+            <div class="pdf-viewer">
+                <iframe class="pdf-iframe" id="pdfViewer" src=""></iframe>
             </div>
         </div>
     </div>
@@ -807,29 +537,23 @@ const actinides = [
 ];
         // Referencias a elementos DOM
         const mainScreen = document.getElementById('mainScreen');
-        const tableScreen = document.getElementById('tableScreen');
+        const pdfScreen = document.getElementById('pdfScreen');
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         const elementInfo = document.getElementById('elementInfo');
-        const showTableBtn = document.getElementById('showTableBtn');
+        const showPdfBtn = document.getElementById('showPdfBtn');
         const showOrbitalsBtn = document.getElementById('showOrbitalsBtn');
         const showValenceBtn = document.getElementById('showValenceBtn');
         const showCompoundsBtn = document.getElementById('showCompoundsBtn');
         const showCalculatorBtn = document.getElementById('showCalculatorBtn');
-        const backFromTableBtn = document.getElementById('backFromTableBtn');
-        const controlsCollapsible = document.getElementById('controlsCollapsible');
-        const toggleElec = document.getElementById('toggleElec');
-        const toggleElectroneg = document.getElementById('toggleElectroneg');
-        const toggleRadius = document.getElementById('toggleRadius');
-        const toggleIonization = document.getElementById('toggleIonization');
-        const toggleNormal = document.getElementById('toggleNormal');
-        const table = document.getElementById('table');
-        const lanthanidesContainer = document.getElementById('lanthanides');
-        const actinidesContainer = document.getElementById('actinides');
+        const backFromPdfBtn = document.getElementById('backFromPdfBtn');
+        const pdfViewer = document.getElementById('pdfViewer');
 
         // Variables de estado
         let currentDisplayMode = 'normal';
-        let allCells = [];
+
+        // URL del PDF en GitHub
+        const pdfUrl = 'https://raw.githubusercontent.com/Mikelikoptero/Taularako-argazkiak/main/taula%20periodikoa%20logoarekin.pdf';
 
         // Funcionalidad de búsqueda
         searchInput.addEventListener('input', function() {
@@ -939,365 +663,25 @@ const actinides = [
             }
         }
 
-        // Determinar bloque electrónico
-        function getElectronBlock(element) {
-            const group = element.x;
-            
-            // Excepción: Helio es bloque s aunque esté en el grupo 18
-            if (element.z === 2) return 's-block';
-            
-            // Basado en la posición en la tabla periódica
-            if (element.group === 'lanthanide' || element.group === 'actinide') {
-                return 'f-block';
-            } else if (group >= 3 && group <= 12) {
-                return 'd-block';
-            } else if (group >= 13 && group <= 18) {
-                return 'p-block';
-            } else if (group >= 1 && group <= 2) {
-                return 's-block';
-            }
-            
-            return 's-block'; // default
-        }
-
-        // Aplicar colores por bloques electrónicos
-        function applyElectronBlockColors() {
-            allCells.forEach(cell => {
-                const z = parseInt(cell.dataset.z);
-                let element;
-                
-                // Encontrar el elemento en el conjunto de datos apropiado
-                if (z >= 57 && z <= 71) {
-                    element = lanthanides.find(el => el.z === z);
-                } else if (z >= 89 && z <= 103) {
-                    element = actinides.find(el => el.z === z);
-                } else {
-                    element = elements.find(el => el.z === z);
-                }
-                
-                if (element) {
-                    const block = getElectronBlock(element);
-                    
-                    // Remover clases anteriores
-                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
-                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
-                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
-                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
-                    
-                    // Aplicar nueva clase de bloque
-                    cell.classList.add(block);
-                }
-            });
-        }
-
-        // Aplicar colores por electronegatividad
-        function applyElectronegativityColors() {
-            allCells.forEach(cell => {
-                const z = parseInt(cell.dataset.z);
-                let element;
-                
-                // Encontrar el elemento en el conjunto de datos apropiado
-                if (z >= 57 && z <= 71) {
-                    element = lanthanides.find(el => el.z === z);
-                } else if (z >= 89 && z <= 103) {
-                    element = actinides.find(el => el.z === z);
-                } else {
-                    element = elements.find(el => el.z === z);
-                }
-                
-                if (element) {
-                    // Remover clases anteriores
-                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
-                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
-                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
-                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
-                    
-                    // Aplicar color basado en electronegatividad
-                    if (element.electroneg === 0) {
-                        cell.classList.add('electroneg-low');
-                    } else if (element.electroneg < 2.0) {
-                        cell.classList.add('electroneg-low');
-                    } else if (element.electroneg < 3.0) {
-                        cell.classList.add('electroneg-medium');
-                    } else {
-                        cell.classList.add('electroneg-high');
-                    }
-                }
-            });
-        }
-
-        // Aplicar colores por radio atómico
-        function applyAtomicRadiusColors() {
-            allCells.forEach(cell => {
-                const z = parseInt(cell.dataset.z);
-                let element;
-                
-                // Encontrar el elemento en el conjunto de datos apropiado
-                if (z >= 57 && z <= 71) {
-                    element = lanthanides.find(el => el.z === z);
-                } else if (z >= 89 && z <= 103) {
-                    element = actinides.find(el => el.z === z);
-                } else {
-                    element = elements.find(el => el.z === z);
-                }
-                
-                if (element) {
-                    // Remover clases anteriores
-                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
-                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
-                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
-                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
-                    
-                    // Aplicar color basado en radio atómico con más gradación
-                    if (element.radius === 0) {
-                        cell.classList.add('radius-very-small');
-                    } else if (element.radius < 60) {
-                        cell.classList.add('radius-very-small');
-                    } else if (element.radius < 90) {
-                        cell.classList.add('radius-small');
-                    } else if (element.radius < 120) {
-                        cell.classList.add('radius-medium-small');
-                    } else if (element.radius < 160) {
-                        cell.classList.add('radius-medium');
-                    } else if (element.radius < 200) {
-                        cell.classList.add('radius-medium-large');
-                    } else if (element.radius < 250) {
-                        cell.classList.add('radius-large');
-                    } else {
-                        cell.classList.add('radius-very-large');
-                    }
-                }
-            });
-        }
-
-        // Aplicar colores por energía de ionización
-        function applyIonizationColors() {
-            allCells.forEach(cell => {
-                const z = parseInt(cell.dataset.z);
-                let element;
-                
-                // Encontrar el elemento en el conjunto de datos apropiado
-                if (z >= 57 && z <= 71) {
-                    element = lanthanides.find(el => el.z === z);
-                } else if (z >= 89 && z <= 103) {
-                    element = actinides.find(el => el.z === z);
-                } else {
-                    element = elements.find(el => el.z === z);
-                }
-                
-                if (element) {
-                    // Remover clases anteriores
-                    cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
-                                         'electroneg-low', 'electroneg-medium', 'electroneg-high',
-                                         'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
-                                         'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
-                    
-                    // Aplicar color basado en energía de ionización con más gradación
-                    if (element.ionization === 0) {
-                        cell.classList.add('ionization-very-low');
-                    } else if (element.ionization < 500) {
-                        cell.classList.add('ionization-very-low');
-                    } else if (element.ionization < 700) {
-                        cell.classList.add('ionization-low');
-                    } else if (element.ionization < 900) {
-                        cell.classList.add('ionization-medium-low');
-                    } else if (element.ionization < 1100) {
-                        cell.classList.add('ionization-medium');
-                    } else if (element.ionization < 1300) {
-                        cell.classList.add('ionization-medium-high');
-                    } else if (element.ionization < 1500) {
-                        cell.classList.add('ionization-high');
-                    } else {
-                        cell.classList.add('ionization-very-high');
-                    }
-                }
-            });
-        }
-
-        // Restaurar colores normales
-        function restoreNormalColors() {
-            allCells.forEach(cell => {
-                // Remover todas las clases de color especiales
-                cell.classList.remove('s-block', 'p-block', 'd-block', 'f-block', 
-                                     'electroneg-low', 'electroneg-medium', 'electroneg-high',
-                                     'radius-very-small', 'radius-small', 'radius-medium-small', 'radius-medium', 'radius-medium-large', 'radius-large', 'radius-very-large',
-                                     'ionization-very-low', 'ionization-low', 'ionization-medium-low', 'ionization-medium', 'ionization-medium-high', 'ionization-high', 'ionization-very-high');
-                
-                // Restaurar color original basado en grupo
-                const z = parseInt(cell.dataset.z);
-                let element;
-                
-                if (z >= 57 && z <= 71) {
-                    element = lanthanides.find(el => el.z === z);
-                } else if (z >= 89 && z <= 103) {
-                    element = actinides.find(el => el.z === z);
-                } else {
-                    element = elements.find(el => el.z === z);
-                }
-                
-                if (element) {
-                    cell.classList.add(getGroupClass(element.group));
-                }
-            });
-        }
-
-        // Crear tabla periódica con grupos y periodos
-        function createPeriodicTable() {
-            table.innerHTML = '';
-            lanthanidesContainer.innerHTML = '';
-            actinidesContainer.innerHTML = '';
-            allCells = [];
-            
-            // CREAR FILA DE GRUPOS
-            const groupRow = document.createElement('div');
-            groupRow.className = 'group-row';
-            
-            // Celda vacía para la esquina superior izquierda
-            const cornerCell = document.createElement('div');
-            cornerCell.style.gridColumn = '1';
-            cornerCell.style.gridRow = '1';
-            cornerCell.style.width = '40px';
-            cornerCell.style.height = '30px';
-            groupRow.appendChild(cornerCell);
-            
-            // Crear etiquetas de grupos (1-18)
-            for (let i = 1; i <= 18; i++) {
-                const groupLabel = document.createElement('div');
-                groupLabel.className = 'group-label';
-                groupLabel.textContent = i;
-                groupLabel.style.gridColumn = i + 1;
-                groupLabel.style.gridRow = '1';
-                groupRow.appendChild(groupLabel);
-            }
-            
-            table.appendChild(groupRow);
-            
-            // Crear celdas de la tabla principal
-            for (let period = 1; period <= 7; period++) {
-                // Crear etiqueta de período
-                const periodLabel = document.createElement('div');
-                periodLabel.className = 'period-label';
-                periodLabel.textContent = period;
-                periodLabel.style.gridColumn = '1';
-                periodLabel.style.gridRow = period + 1;
-                table.appendChild(periodLabel);
-                
-                // Crear elementos del período
-                for (let group = 1; group <= 18; group++) {
-                    const element = elements.find(el => el.x === group && el.y === period);
-                    
-                    if (element) {
-                        const cell = document.createElement('div');
-                        cell.className = `cell ${getGroupClass(element.group)}`;
-                        cell.style.gridColumn = group + 1;
-                        cell.style.gridRow = period + 1;
-                        cell.dataset.z = element.z;
-                        cell.innerHTML = `
-                            <div class="num">${element.z}</div>
-                            <div class="sym">${element.sym}</div>
-                            <div class="ename">${element.name}</div>
-                        `;
-                        cell.addEventListener('click', () => {
-                            showElementInfo(element);
-                            showScreen('main');
-                        });
-                        table.appendChild(cell);
-                        allCells.push(cell);
-                    } else {
-                        // Crear celda vacía si no hay elemento
-                        const emptyCell = document.createElement('div');
-                        emptyCell.style.gridColumn = group + 1;
-                        emptyCell.style.gridRow = period + 1;
-                        emptyCell.style.width = 'var(--cell-size)';
-                        emptyCell.style.height = 'var(--cell-size)';
-                        table.appendChild(emptyCell);
-                    }
-                }
-            }
-            
-            // CREAR LANTÁNIDOS - CORREGIDA POSICIÓN (empiezan en grupo 3)
-            // Añadir espacio para etiquetas de período (40px)
-            const periodSpace = document.createElement('div');
-            periodSpace.className = 'period-space-cell';
-            lanthanidesContainer.appendChild(periodSpace);
-            
-            // Añadir 2 espacios vacíos para alinear con grupo 3
-            for (let i = 0; i < 2; i++) {
-                const space = document.createElement('div');
-                space.className = 'space-cell';
-                lanthanidesContainer.appendChild(space);
-            }
-            
-            lanthanides.forEach(el => {
-                const cell = document.createElement('div');
-                cell.className = `cell ${getGroupClass(el.group)}`;
-                cell.dataset.z = el.z;
-                cell.innerHTML = `
-                    <div class="num">${el.z}</div>
-                    <div class="sym">${el.sym}</div>
-                    <div class="ename">${el.name}</div>
-                `;
-                cell.addEventListener('click', () => {
-                    showElementInfo(el);
-                    showScreen('main');
-                });
-                lanthanidesContainer.appendChild(cell);
-                allCells.push(cell);
-            });
-            
-            // CREAR ACTÍNIDOS - CORREGIDA POSICIÓN (empiezan en grupo 3)
-            // Añadir espacio para etiquetas de período (40px)
-            const periodSpace2 = document.createElement('div');
-            periodSpace2.className = 'period-space-cell';
-            actinidesContainer.appendChild(periodSpace2);
-            
-            // Añadir 2 espacios vacíos para alinear con grupo 3
-            for (let i = 0; i < 2; i++) {
-                const space = document.createElement('div');
-                space.className = 'space-cell';
-                actinidesContainer.appendChild(space);
-            }
-            
-            actinides.forEach(el => {
-                const cell = document.createElement('div');
-                cell.className = `cell ${getGroupClass(el.group)}`;
-                cell.dataset.z = el.z;
-                cell.innerHTML = `
-                    <div class="num">${el.z}</div>
-                    <div class="sym">${el.sym}</div>
-                    <div class="ename">${el.name}</div>
-                `;
-                cell.addEventListener('click', () => {
-                    showElementInfo(el);
-                    showScreen('main');
-                });
-                actinidesContainer.appendChild(cell);
-                allCells.push(cell);
-            });
-        }
-
         // Funciones para cambiar entre pantallas
         function showScreen(screen) {
             mainScreen.style.display = 'none';
-            tableScreen.style.display = 'none';
+            pdfScreen.style.display = 'none';
             
             switch(screen) {
                 case 'main':
                     mainScreen.style.display = 'flex';
                     break;
-                case 'table':
-                    tableScreen.style.display = 'block';
-                    // Asegurar que el botón Familia esté activo y se apliquen los colores de familia
-                    toggleNormal.classList.add('active');
-                    restoreNormalColors();
+                case 'pdf':
+                    pdfScreen.style.display = 'block';
+                    pdfViewer.src = pdfUrl;
                     break;
             }
         }
 
         // Event listeners
-        showTableBtn.addEventListener('click', () => {
-            showScreen('table');
-            createPeriodicTable();
+        showPdfBtn.addEventListener('click', () => {
+            showScreen('pdf');
         });
 
         showOrbitalsBtn.addEventListener('click', () => {
@@ -1321,100 +705,14 @@ const actinides = [
             window.location.href = './Kalkulagailu/';
         });
 
-        backFromTableBtn.addEventListener('click', () => {
+        backFromPdfBtn.addEventListener('click', () => {
             showScreen('main');
-        });
-
-        // Toggle para menú retráctil
-        controlsCollapsible.addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
-
-        // Toggles para cambiar modo de visualización de la tabla
-        toggleElec.addEventListener('click', () => {
-            // Desactivar todos los toggles
-            toggleElec.classList.remove('active');
-            toggleElectroneg.classList.remove('active');
-            toggleRadius.classList.remove('active');
-            toggleIonization.classList.remove('active');
-            toggleNormal.classList.remove('active');
-            
-            // Activar solo este toggle
-            toggleElec.classList.add('active');
-            
-            // Aplicar colores
-            applyElectronBlockColors();
-        });
-
-        toggleElectroneg.addEventListener('click', () => {
-            // Desactivar todos los toggles
-            toggleElec.classList.remove('active');
-            toggleElectroneg.classList.remove('active');
-            toggleRadius.classList.remove('active');
-            toggleIonization.classList.remove('active');
-            toggleNormal.classList.remove('active');
-            
-            // Activar solo este toggle
-            toggleElectroneg.classList.add('active');
-            
-            // Aplicar colores
-            applyElectronegativityColors();
-        });
-
-        toggleRadius.addEventListener('click', () => {
-            // Desactivar todos los toggles
-            toggleElec.classList.remove('active');
-            toggleElectroneg.classList.remove('active');
-            toggleRadius.classList.remove('active');
-            toggleIonization.classList.remove('active');
-            toggleNormal.classList.remove('active');
-            
-            // Activar solo este toggle
-            toggleRadius.classList.add('active');
-            
-            // Aplicar colores
-            applyAtomicRadiusColors();
-        });
-
-        toggleIonization.addEventListener('click', () => {
-            // Desactivar todos los toggles
-            toggleElec.classList.remove('active');
-            toggleElectroneg.classList.remove('active');
-            toggleRadius.classList.remove('active');
-            toggleIonization.classList.remove('active');
-            toggleNormal.classList.remove('active');
-            
-            // Activar solo este toggle
-            toggleIonization.classList.add('active');
-            
-            // Aplicar colores
-            applyIonizationColors();
-        });
-
-        toggleNormal.addEventListener('click', () => {
-            // Desactivar todos los toggles
-            toggleElec.classList.remove('active');
-            toggleElectroneg.classList.remove('active');
-            toggleRadius.classList.remove('active');
-            toggleIonization.classList.remove('active');
-            toggleNormal.classList.remove('active');
-            
-            // Activar solo este toggle
-            toggleNormal.classList.add('active');
-            
-            // Restaurar colores normales
-            restoreNormalColors();
+            // Limpiar el iframe al volver para ahorrar recursos
+            pdfViewer.src = '';
         });
 
         // Inicialización
-        createPeriodicTable();
         showElementInfo(elements[0]);
     </script>
 </body>
-
 </html>
-
-
-
-
-
